@@ -1121,3 +1121,6 @@
 {"level":"debug","message":"[vite] hot updated: /src/components/ContributePanel.tsx","timestamp":1792347699802}
 {"level":"debug","message":"[vite] hot updated: /src/pages/Landing.tsx","timestamp":1792347699802}
 {"level":"debug","message":"[vite] hot updated: /src/pages/Dashboard.tsx","timestamp":1792347699803}
+{"level":"debug","message":"[vite] connected.","timestamp":1792348136176}
+{"level":"debug","message":"[vite] connected.","timestamp":1792348136819}
+{"level":"log","message":"[vite] server connection lost. Polling for restart...","timestamp":1792348945767}
