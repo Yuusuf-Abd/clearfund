@@ -51,6 +51,7 @@ export default function TxExplorer({ onNavigate, store }: TxExplorerProps) {
 
   for (const c of campaigns.filter((c) => !c.id.startsWith('__shadow_'))) {
     for (const cn of c.contributions) {
+      const contributionSource = detectSource(cn.txRef, c.isDemo);
       allTxs.push({
         txRef: cn.txRef,
         campaignTitle: c.title,
@@ -60,8 +61,9 @@ export default function TxExplorer({ onNavigate, store }: TxExplorerProps) {
         from: cn.contributor,
         timestamp: cn.timestamp,
         note: cn.note,
-        verified: true,
-        source: detectSource(cn.txRef, c.isDemo),
+        // Only mark verified when the tx hash is a genuine onchain record
+        verified: contributionSource === 'testnet',
+        source: contributionSource,
       });
     }
     for (const m of c.milestones) {

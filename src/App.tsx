@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useCampaigns } from './hooks/useCampaigns';
 import Nav from './components/Nav';
 import ContractModeBanner from './components/ContractModeBanner';
+import { WrongNetworkBanner } from './components/WrongNetworkBanner';
 import Landing from './pages/Landing';
 import Dashboard from './pages/Dashboard';
 import CreateCampaign from './pages/CreateCampaign';
@@ -38,6 +39,7 @@ export default function App() {
   return (
     <div className="min-h-dvh" style={{ background: 'var(--bg)' }}>
       <Nav currentPage={page} onNavigate={navigate} />
+      <WrongNetworkBanner />
       <ContractModeBanner />
       {page === 'landing' && <Landing onNavigate={navigate} store={store} />}
       {page === 'dashboard' && <Dashboard onNavigate={navigate} store={store} />}

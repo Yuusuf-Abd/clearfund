@@ -19,7 +19,9 @@ import { getUsdc } from '@/onchain-facts'
 export const CLEARFUND_CHAIN = arcTestnet
 
 /** USDC address on Arc Testnet (6 decimals). From @/onchain-facts. */
-export const USDC_ADDRESS = getUsdc(arcTestnet.id)?.address as `0x${string}`
+const _usdcFact = getUsdc(arcTestnet.id)
+if (!_usdcFact) throw new Error('ClearFund: USDC address not found in onchain-facts for Arc Testnet')
+export const USDC_ADDRESS: `0x${string}` = _usdcFact.address as `0x${string}`
 
 /**
  * Deployed ClearFundEscrow address.
@@ -345,6 +347,8 @@ export const CLEARFUND_ESCROW_ABI = [
   { type: 'error', name: 'CampaignInactive',          inputs: [] },
   { type: 'error', name: 'CampaignStillActive',       inputs: [] },
   { type: 'error', name: 'MilestoneAllocationExceeded', inputs: [] },
+  { type: 'error', name: 'TooManyMilestones',           inputs: [] },
+  { type: 'error', name: 'ApprovedMilestoneBlocksCancel', inputs: [] },
   { type: 'error', name: 'InvalidMilestoneIndex',     inputs: [] },
   {
     type: 'error',

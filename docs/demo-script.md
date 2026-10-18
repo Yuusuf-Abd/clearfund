@@ -158,18 +158,29 @@
 
 ### 8. Funding Release and Refund Logic (45 seconds)
 
-**[Screen: Campaign Details — Payout panel]**
+**[Screen: Campaign Details]**
 
 > "Once a milestone is approved, the organizer calls releaseMilestone
 > to transfer USDC to the recipient. These are two distinct steps —
 > approval alone does not transfer funds."
 
-- Navigate back to a demo campaign
-- Scroll to the Payout Panel in the sidebar (visible in testnet mode)
-- Explain the two-step flow: approval then release
-- Show the Refund panel: "If a campaign is cancelled, contributors claim
-  refunds themselves. The contract never sweeps funds to the owner.
+> "The Payout and Refund panels are only rendered in Arc Testnet mode
+> (when VITE_CLEARFUND_ESCROW_ADDRESS is set). In DEMO mode you can
+> describe the two-step flow from the contract source or the README
+> rather than showing the live UI."
+
+- Navigate back to a campaign details page
+- Read aloud from the CampaignDetails sidebar: explain the payout flow
+  using the milestone timeline as a visual guide:
+  - Pending → In Progress → Evidence submitted → Reviewer approves → Organizer releases
+- If you have a deployed contract configured, show the Release Milestone
+  and Claim Refund panels in the sidebar
+- Explain the refund model: "If a campaign is cancelled, contributors call
+  claimRefund themselves. The contract never sweeps funds to the owner.
   Refunds may be partial if milestone payouts were already released."
+- **NOTE FOR RECORDER:** If the contract is not deployed (DEMO mode only),
+  skip the live panel screenshots and reference the contract source and
+  README instead. Do not claim the panels are visible when they are not.
 
 ---
 

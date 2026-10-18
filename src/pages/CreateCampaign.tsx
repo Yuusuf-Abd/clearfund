@@ -253,7 +253,13 @@ export default function CreateCampaign({ onNavigate, store }: CreateCampaignProp
           <h1 className="display font-semibold text-2xl" style={{ color: 'var(--ink)' }}>
             Create Campaign
           </h1>
-          <DemoBadge />
+          {mode === 'demo' && <DemoBadge />}
+          {mode === 'testnet' && (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold"
+              style={{ background: 'rgba(77,157,224,0.15)', color: 'var(--accent)', border: '1px solid rgba(77,157,224,0.3)' }}>
+              Arc Testnet
+            </span>
+          )}
         </div>
         <p className="text-sm mb-8" style={{ color: 'var(--subtle)' }}>
           Define your funding target, milestones, and evidence requirements.
@@ -618,7 +624,9 @@ export default function CreateCampaign({ onNavigate, store }: CreateCampaignProp
                 style={{ background: 'rgba(77,157,224,0.1)', color: 'var(--accent)', border: '1px solid rgba(77,157,224,0.25)' }}>
                 <Wifi size={12} className="mt-0.5 shrink-0" />
                 <span>
-                  <strong>Arc Testnet:</strong> Saving will record this campaign locally. Onchain <code className="mono">createCampaign</code> + <code className="mono">addMilestone</code> transactions will be prepared in Phase 4 (wallet signing step). No mainnet transactions. No real funds.
+                  <strong>Arc Testnet:</strong> Submitting will record this campaign locally and send{' '}
+                  <code className="mono">createCampaign</code> + <code className="mono">addMilestone</code>{' '}
+                  transactions requiring wallet signatures. No mainnet transactions. No real funds.
                 </span>
               </div>
             )}

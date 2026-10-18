@@ -92,6 +92,10 @@ contract ClearFundEscrow is Ownable, ReentrancyGuard {
     /// @notice Address authorised to approve milestones. Changeable by owner only.
     address public reviewer;
 
+    /// @notice Maximum number of milestones allowed per campaign.
+    /// @dev    Prevents unbounded O(n) loops in updateRecipient and cancelCampaign.
+    uint256 public constant MAX_MILESTONES = 50;
+
     /// @notice Auto-incrementing campaign counter; also the next campaign ID.
     uint256 public nextCampaignId;
 
@@ -127,6 +131,8 @@ contract ClearFundEscrow is Ownable, ReentrancyGuard {
     error CampaignInactive();
     error CampaignStillActive();
     error MilestoneAllocationExceeded();
+    error TooManyMilestones();
+    error ApprovedMilestoneBlocksCancel();
     error InvalidMilestoneIndex();
     error InvalidMilestoneStatus(MilestoneStatus expected, MilestoneStatus actual);
     error MilestoneAlreadyPaid();
@@ -217,6 +223,7 @@ contract ClearFundEscrow is Ownable, ReentrancyGuard {
         if (campaign.organizer != msg.sender) revert NotOrganizer();
         if (!campaign.active) revert CampaignInactive();
         if (amount == 0) revert ZeroAmount();
+        if (campaign.milestoneCount >= MAX_MILESTONES) revert TooManyMilestones();
 
         uint256 newTotalAllocated = campaign.totalAllocated + amount;
         if (newTotalAllocated > campaign.target) revert MilestoneAllocationExceeded();
@@ -237,9 +244,13 @@ contract ClearFundEscrow is Ownable, ReentrancyGuard {
      * @notice Cancels an active campaign.
      * @dev    After cancellation contributors may call claimRefund().
      *         No new contributions or milestones are accepted.
-     *         Milestones already in Approved state will no longer be releaseable
-     *         because releaseMilestone does not require active=true, so any
-     *         approved milestones should be released BEFORE cancelling if desired.
+     *         Cancellation is BLOCKED when any milestone is in Approved status.
+     *         Reason: releaseMilestone requires active=true, so an Approved milestone
+     *         on a cancelled campaign is permanently un-releasable, and because a
+     *         payout has been earmarked, contributors who contributed less than the
+     *         milestone amount may not be fully refundable. The organizer must either:
+     *         (a) release all Approved milestones first, or
+     *         (b) ask the reviewer to revokeApproval before cancelling.
      * @param campaignId  ID of the campaign.
      */
     function cancelCampaign(uint256 campaignId) external {
@@ -247,6 +258,15 @@ contract ClearFundEscrow is Ownable, ReentrancyGuard {
         _requireValidCampaign(campaign);
         if (campaign.organizer != msg.sender) revert NotOrganizer();
         if (!campaign.active) revert CampaignInactive();
+
+        // Block cancellation while any milestone is Approved but not yet Paid.
+        // This prevents USDC from being permanently locked in the escrow.
+        uint256 count = campaign.milestoneCount;
+        for (uint256 i = 0; i < count; ++i) {
+            if (milestones[campaignId][i].status == MilestoneStatus.Approved) {
+                revert ApprovedMilestoneBlocksCancel();
+            }
+        }
 
         campaign.active = false;
         emit CampaignCancelled(campaignId);

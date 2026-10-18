@@ -527,12 +527,20 @@ contract ClearFundEscrowTest is Test {
         escrow.releaseMilestone(id, 0);
     }
 
-    // REGRESSION: release blocked on cancelled campaign
+    // REGRESSION: release blocked on cancelled campaign.
+    // Since S-02 fix, cancel with Approved milestone is itself blocked.
+    // Correct path: reviewer revokes approval → organizer cancels → release reverts with CampaignInactive.
     function test_ReleaseMilestone_RevertsOnCancelledCampaign() public {
         uint256 id = _setupContributedCampaign();
         _advanceToApproved(id, 0);
+
+        // Revoke the approval first (required by S-02 fix)
+        vm.prank(reviewer); escrow.revokeApproval(id, 0);
+
+        // Now cancel is allowed (no Approved milestones remain)
         vm.prank(organizer); escrow.cancelCampaign(id);
 
+        // The campaign is now inactive; releaseMilestone checks active first.
         vm.prank(organizer);
         vm.expectRevert(ClearFundEscrow.CampaignInactive.selector);
         escrow.releaseMilestone(id, 0);
@@ -1007,7 +1015,75 @@ contract ClearFundEscrowTest is Test {
     }
 
     // ════════════════════════════════════════════════════════════════════════
-    // 20. Phase 3 integration tests
+    // 20. S-02 regression: cancelCampaign blocked by Approved milestone
+    // ════════════════════════════════════════════════════════════════════════
+
+    // REGRESSION S-02: cancelling while a milestone is Approved must revert.
+    // Without this guard, USDC would be permanently locked (Approved milestone
+    // cannot be released on an inactive campaign; no refund path covers it).
+    function test_CancelCampaign_RevertsApprovedMilestone() public {
+        uint256 id = _setupContributedCampaign();
+        _advanceToApproved(id, 0);
+
+        vm.prank(organizer);
+        vm.expectRevert(ClearFundEscrow.ApprovedMilestoneBlocksCancel.selector);
+        escrow.cancelCampaign(id);
+    }
+
+    // Cancel is allowed after the Approved milestone is first released.
+    function test_CancelCampaign_AllowedAfterReleaseOfApprovedMilestone() public {
+        uint256 id = _setupContributedCampaign();
+        _advanceToApproved(id, 0);
+
+        // Release the approved milestone first
+        vm.prank(organizer); escrow.releaseMilestone(id, 0);
+
+        // Now cancel must succeed
+        vm.prank(organizer); escrow.cancelCampaign(id);
+        (, , , , , , bool active, ,) = escrow.campaigns(id);
+        assertFalse(active);
+    }
+
+    // Cancel is allowed after the reviewer revokes the approval.
+    function test_CancelCampaign_AllowedAfterRevokeApproval() public {
+        uint256 id = _setupContributedCampaign();
+        _advanceToApproved(id, 0);
+
+        // Reviewer revokes approval
+        vm.prank(reviewer); escrow.revokeApproval(id, 0);
+
+        // Now cancel must succeed
+        vm.prank(organizer); escrow.cancelCampaign(id);
+        (, , , , , , bool active, ,) = escrow.campaigns(id);
+        assertFalse(active);
+    }
+
+    // ════════════════════════════════════════════════════════════════════════
+    // 21. S-03 regression: MAX_MILESTONES cap
+    // ════════════════════════════════════════════════════════════════════════
+
+    // REGRESSION S-03: adding more than MAX_MILESTONES milestones must revert.
+    function test_AddMilestone_RevertsAtMaxMilestones() public {
+        uint256 id = _createCampaign();
+        uint256 max = escrow.MAX_MILESTONES();
+        // Each milestone = 1 USDC base unit; target = 500_000e6 — well above max * 1
+        vm.startPrank(organizer);
+        for (uint256 i = 0; i < max; ++i) {
+            escrow.addMilestone(id, "m", 1);
+        }
+        // The (MAX_MILESTONES + 1)th must revert
+        vm.expectRevert(ClearFundEscrow.TooManyMilestones.selector);
+        escrow.addMilestone(id, "overflow", 1);
+        vm.stopPrank();
+    }
+
+    // MAX_MILESTONES == 50 (the agreed cap)
+    function test_MaxMilestones_Is50() public view {
+        assertEq(escrow.MAX_MILESTONES(), 50);
+    }
+
+    // ════════════════════════════════════════════════════════════════════════
+    // 22. Phase 3 integration tests
     // ════════════════════════════════════════════════════════════════════════
 
     // ── Campaign creation ────────────────────────────────────────────────────
