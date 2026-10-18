@@ -1,0 +1,44 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build output
+dist/
+dist-ssr/
+contracts/out/
+contracts/cache/
+
+# Environment — NEVER commit
+.env
+.env.local
+.env.*.local
+.env.production
+
+# Circle credentials — NEVER commit
+.circle/
+recovery_file*.dat
+
+# Foundry
+cache/
+broadcast/
+
+# IDE
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+/tmp/
+
+# Bun
+.bun/

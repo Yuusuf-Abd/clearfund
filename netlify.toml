@@ -1,0 +1,15 @@
+[build]
+  command     = "bun run build"
+  publish     = "dist"
+
+[build.environment]
+  # Environment variables can be set in the Netlify dashboard.
+  # Required for Arc Testnet mode (leave empty for DEMO mode):
+  #   VITE_CLEARFUND_ESCROW_ADDRESS
+  #   VITE_CLEARFUND_DEPLOY_BLOCK
+  # The app starts safely in DEMO mode when these are not set.
+
+[[redirects]]
+  from   = "/*"
+  to     = "/index.html"
+  status = 200
