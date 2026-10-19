@@ -1177,3 +1177,160 @@
 {"level":"debug","message":"[vite] connected.","timestamp":1792356875929}
 {"level":"debug","message":"[vite] connected.","timestamp":1792357695892}
 {"level":"log","message":"[vite] server connection lost. Polling for restart...","timestamp":1792358851007}
+{"level":"debug","message":"[vite] connected.","timestamp":1792408005744}
+{"level":"debug","message":"[vite] connected.","timestamp":1792409266461}
+{"level":"debug","message":"[vite] hot updated: /src/index.css","timestamp":1792409424722}
+{"level":"debug","message":"[vite] hot updated: /src/pages/CampaignDetails.tsx","timestamp":1792409424723}
+{"level":"debug","message":"[vite] hot updated: /src/components/TxStatusBadge.tsx","timestamp":1792409424724}
+{"level":"debug","message":"[vite] hot updated: /src/pages/CreateCampaign.tsx","timestamp":1792409424724}
+{"level":"debug","message":"[vite] hot updated: /src/components/ContractModeBanner.tsx","timestamp":1792409424724}
+{"level":"debug","message":"[vite] hot updated: /src/pages/ReviewerDashboard.tsx","timestamp":1792409424724}
+{"level":"debug","message":"[vite] hot updated: /src/pages/TxExplorer.tsx","timestamp":1792409424725}
+{"level":"debug","message":"[vite] hot updated: /src/pages/ProofCenter.tsx","timestamp":1792409424725}
+{"level":"debug","message":"[vite] hot updated: /src/components/ContributePanel.tsx","timestamp":1792409424725}
+{"level":"debug","message":"[vite] hot updated: /src/pages/Landing.tsx","timestamp":1792409424725}
+{"level":"error","message":"Warning: React has detected a change in the order of Hooks called by %s. This will lead to bugs and errors if not fixed. For more information, read the Rules of Hooks: https://reactjs.org/link/rules-of-hooks\n\n   Previous render            Next render\n   ------------------------------------------------------\n%s   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n%s ProofCenter 1. useContext                 useContext\n2. useSyncExternalStore       useSyncExternalStore\n3. useState                   useState\n4. useContext                 useContext\n5. useContext                 useContext\n6. useState                   useState\n7. useEffect                  useEffect\n8. useCallback                useCallback\n9. useSyncExternalStore       useSyncExternalStore\n10. useCallback               useCallback\n11. useCallback               useContext\n \n    at ProofCenter (https://ix0mtlvxgrqlgspjd3g4v.preview.studio.arc.io/src/pages/ProofCenter.tsx?t=1792409407765:80:39)\n    at div\n    at App (https://ix0mtlvxgrqlgspjd3g4v.preview.studio.arc.io/src/App.tsx?t=1792354343403:39:17)\n    at Le (https://ix0mtlvxgrqlgspjd3g4v.preview.studio.arc.io/node_modules/.vite/deps/connectkit.js?v=ed645da4:18793:42)\n    at Web3ContextProvider (https://ix0mtlvxgrqlgspjd3g4v.preview.studio.arc.io/node_modules/.vite/deps/connectkit.js?v=ed645da4:34420:30)\n    at ConnectKitProvider (https://ix0mtlvxgrqlgspjd3g4v.preview.studio.arc.io/node_modules/.vite/deps/connectkit.js?v=ed645da4:37910:29)\n    at QueryClientProvider (https://ix0mtlvxgrqlgspjd3g4v.preview.studio.arc.io/node_modules/.vite/deps/chunk-WZEH4STI.js?v=ed645da4:39:30)\n    at Hydrate (https://ix0mtlvxgrqlgspjd3g4v.preview.studio.arc.io/node_modules/.vite/deps/chunk-WPFSLU33.js?v=ed645da4:392:11)\n    at WagmiProvider (https://ix0mtlvxgrqlgspjd3g4v.preview.studio.arc.io/node_modules/.vite/deps/chunk-WPFSLU33.js?v=ed645da4:414:11)","timestamp":1792409424915}
+{"level":"error","message":"Uncaught TypeError: Cannot read properties of null (reading 'getSnapshot')","timestamp":1792409424915,"source":"https://ix0mtlvxgrqlgspjd3g4v.preview.studio.arc.io/node_modules/.vite/deps/chunk-YI6NTZAD.js?v=ed645da4:18862:20","stack":"TypeError: Cannot read properties of null (reading 'getSnapshot')\n    at updateSyncExternalStore (https://ix0mtlvxgrqlgspjd3g4v.preview.studio.arc.io/node_modules/.vite/deps/chunk-YI6NTZAD.js?v=ed645da4:18862:20)\n    at Object.useSyncExternalStore (https://ix0mtlvxgrqlgspjd3g4v.preview.studio.arc.io/node_modules/.vite/deps/chunk-YI6NTZAD.js?v=ed645da4:19707:22)\n    at useSyncExternalStore (https://ix0mtlvxgrqlgspjd3g4v.preview.studio.arc.io/node_modules/.vite/deps/chunk-TWJ6NINL.js?v=ed645da4:1405:29)\n    at useChainId (https://ix0mtlvxgrqlgspjd3g4v.preview.studio.arc.io/node_modules/.vite/deps/chunk-WPFSLU33.js?v=ed645da4:1582:49)\n    at useWaitForTransactionReceipt (https://ix0mtlvxgrqlgspjd3g4v.preview.studio.arc.io/node_modules/.vite/deps/chunk-WPFSLU33.js?v=ed645da4:2502:19)\n    at useSubmitEvidence (https://ix0mtlvxgrqlgspjd3g4v.preview.studio.arc.io/src/hooks/useClearFund.ts?t=1792409407765:318:34)\n    at ProofCenter (https://ix0mtlvxgrqlgspjd3g4v.preview.studio.arc.io/src/pages/ProofCenter.tsx?t=1792409407765:84:75)\n    at renderWithHooks (https://ix0mtlvxgrqlgspjd3g4v.preview.studio.arc.io/node_modules/.vite/deps/chunk-YI6NTZAD.js?v=ed645da4:18474:26)\n    at updateFunctionComponent (https://ix0mtlvxgrqlgspjd3g4v.preview.studio.arc.io/node_modules/.vite/deps/chunk-YI6NTZAD.js?v=ed645da4:21508:28)\n    at beginWork (https://ix0mtlvxgrqlgspjd3g4v.preview.studio.arc.io/node_modules/.vite/deps/chunk-YI6NTZAD.js?v=ed645da4:22850:22)"}
+{"level":"error","message":"Uncaught TypeError: Cannot read properties of null (reading 'getSnapshot')","timestamp":1792409424918,"source":"https://ix0mtlvxgrqlgspjd3g4v.preview.studio.arc.io/node_modules/.vite/deps/chunk-YI6NTZAD.js?v=ed645da4:18862:20","stack":"TypeError: Cannot read properties of null (reading 'getSnapshot')\n    at updateSyncExternalStore (https://ix0mtlvxgrqlgspjd3g4v.preview.studio.arc.io/node_modules/.vite/deps/chunk-YI6NTZAD.js?v=ed645da4:18862:20)\n    at Object.useSyncExternalStore (https://ix0mtlvxgrqlgspjd3g4v.preview.studio.arc.io/node_modules/.vite/deps/chunk-YI6NTZAD.js?v=ed645da4:19707:22)\n    at useSyncExternalStore (https://ix0mtlvxgrqlgspjd3g4v.preview.studio.arc.io/node_modules/.vite/deps/chunk-TWJ6NINL.js?v=ed645da4:1405:29)\n    at useChainId (https://ix0mtlvxgrqlgspjd3g4v.preview.studio.arc.io/node_modules/.vite/deps/chunk-WPFSLU33.js?v=ed645da4:1582:49)\n    at useWaitForTransactionReceipt (https://ix0mtlvxgrqlgspjd3g4v.preview.studio.arc.io/node_modules/.vite/deps/chunk-WPFSLU33.js?v=ed645da4:2502:19)\n    at useSubmitEvidence (https://ix0mtlvxgrqlgspjd3g4v.preview.studio.arc.io/src/hooks/useClearFund.ts?t=1792409407765:318:34)\n    at ProofCenter (https://ix0mtlvxgrqlgspjd3g4v.preview.studio.arc.io/src/pages/ProofCenter.tsx?t=1792409407765:84:75)\n    at renderWithHooks (https://ix0mtlvxgrqlgspjd3g4v.preview.studio.arc.io/node_modules/.vite/deps/chunk-YI6NTZAD.js?v=ed645da4:18474:26)\n    at updateFunctionComponent (https://ix0mtlvxgrqlgspjd3g4v.preview.studio.arc.io/node_modules/.vite/deps/chunk-YI6NTZAD.js?v=ed645da4:21508:28)\n    at beginWork (https://ix0mtlvxgrqlgspjd3g4v.preview.studio.arc.io/node_modules/.vite/deps/chunk-YI6NTZAD.js?v=ed645da4:22850:22)"}
+{"level":"error","message":"The above error occurred in the <ProofCenter> component:\n\n    at ProofCenter (https://ix0mtlvxgrqlgspjd3g4v.preview.studio.arc.io/src/pages/ProofCenter.tsx?t=1792409407765:80:39)\n    at div\n    at App (https://ix0mtlvxgrqlgspjd3g4v.preview.studio.arc.io/src/App.tsx?t=1792354343403:39:17)\n    at Le (https://ix0mtlvxgrqlgspjd3g4v.preview.studio.arc.io/node_modules/.vite/deps/connectkit.js?v=ed645da4:18793:42)\n    at Web3ContextProvider (https://ix0mtlvxgrqlgspjd3g4v.preview.studio.arc.io/node_modules/.vite/deps/connectkit.js?v=ed645da4:34420:30)\n    at ConnectKitProvider (https://ix0mtlvxgrqlgspjd3g4v.preview.studio.arc.io/node_modules/.vite/deps/connectkit.js?v=ed645da4:37910:29)\n    at QueryClientProvider (https://ix0mtlvxgrqlgspjd3g4v.preview.studio.arc.io/node_modules/.vite/deps/chunk-WZEH4STI.js?v=ed645da4:39:30)\n    at Hydrate (https://ix0mtlvxgrqlgspjd3g4v.preview.studio.arc.io/node_modules/.vite/deps/chunk-WPFSLU33.js?v=ed645da4:392:11)\n    at WagmiProvider (https://ix0mtlvxgrqlgspjd3g4v.preview.studio.arc.io/node_modules/.vite/deps/chunk-WPFSLU33.js?v=ed645da4:414:11)\n\nConsider adding an error boundary to your tree to customize error handling behavior.\nVisit https://reactjs.org/link/error-boundaries to learn more about error boundaries.","timestamp":1792409424919}
+{"level":"error","message":"Unhandled promise rejection: TypeError: Cannot read properties of null (reading 'getSnapshot')\n    at updateSyncExternalStore (https://ix0mtlvxgrqlgspjd3g4v.preview.studio.arc.io/node_modules/.vite/deps/chunk-YI6NTZAD.js?v=ed645da4:18862:20)\n    at Object.useSyncExternalStore (https://ix0mtlvxgrqlgspjd3g4v.preview.studio.arc.io/node_modules/.vite/deps/chunk-YI6NTZAD.js?v=ed645da4:19707:22)\n    at useSyncExternalStore (https://ix0mtlvxgrqlgspjd3g4v.preview.studio.arc.io/node_modules/.vite/deps/chunk-TWJ6NINL.js?v=ed645da4:1405:29)\n    at useChainId (https://ix0mtlvxgrqlgspjd3g4v.preview.studio.arc.io/node_modules/.vite/deps/chunk-WPFSLU33.js?v=ed645da4:1582:49)\n    at useWaitForTransactionReceipt (https://ix0mtlvxgrqlgspjd3g4v.preview.studio.arc.io/node_modules/.vite/deps/chunk-WPFSLU33.js?v=ed645da4:2502:19)\n    at useSubmitEvidence (https://ix0mtlvxgrqlgspjd3g4v.preview.studio.arc.io/src/hooks/useClearFund.ts?t=1792409407765:318:34)\n    at ProofCenter (https://ix0mtlvxgrqlgspjd3g4v.preview.studio.arc.io/src/pages/ProofCenter.tsx?t=1792409407765:84:75)\n    at renderWithHooks (https://ix0mtlvxgrqlgspjd3g4v.preview.studio.arc.io/node_modules/.vite/deps/chunk-YI6NTZAD.js?v=ed645da4:18474:26)\n    at updateFunctionComponent (https://ix0mtlvxgrqlgspjd3g4v.preview.studio.arc.io/node_modules/.vite/deps/chunk-YI6NTZAD.js?v=ed645da4:21508:28)\n    at beginWork (https://ix0mtlvxgrqlgspjd3g4v.preview.studio.arc.io/node_modules/.vite/deps/chunk-YI6NTZAD.js?v=ed645da4:22850:22)","timestamp":1792409424925,"stack":"TypeError: Cannot read properties of null (reading 'getSnapshot')\n    at updateSyncExternalStore (https://ix0mtlvxgrqlgspjd3g4v.preview.studio.arc.io/node_modules/.vite/deps/chunk-YI6NTZAD.js?v=ed645da4:18862:20)\n    at Object.useSyncExternalStore (https://ix0mtlvxgrqlgspjd3g4v.preview.studio.arc.io/node_modules/.vite/deps/chunk-YI6NTZAD.js?v=ed645da4:19707:22)\n    at useSyncExternalStore (https://ix0mtlvxgrqlgspjd3g4v.preview.studio.arc.io/node_modules/.vite/deps/chunk-TWJ6NINL.js?v=ed645da4:1405:29)\n    at useChainId (https://ix0mtlvxgrqlgspjd3g4v.preview.studio.arc.io/node_modules/.vite/deps/chunk-WPFSLU33.js?v=ed645da4:1582:49)\n    at useWaitForTransactionReceipt (https://ix0mtlvxgrqlgspjd3g4v.preview.studio.arc.io/node_modules/.vite/deps/chunk-WPFSLU33.js?v=ed645da4:2502:19)\n    at useSubmitEvidence (https://ix0mtlvxgrqlgspjd3g4v.preview.studio.arc.io/src/hooks/useClearFund.ts?t=1792409407765:318:34)\n    at ProofCenter (https://ix0mtlvxgrqlgspjd3g4v.preview.studio.arc.io/src/pages/ProofCenter.tsx?t=1792409407765:84:75)\n    at renderWithHooks (https://ix0mtlvxgrqlgspjd3g4v.preview.studio.arc.io/node_modules/.vite/deps/chunk-YI6NTZAD.js?v=ed645da4:18474:26)\n    at updateFunctionComponent (https://ix0mtlvxgrqlgspjd3g4v.preview.studio.arc.io/node_modules/.vite/deps/chunk-YI6NTZAD.js?v=ed645da4:21508:28)\n    at beginWork (https://ix0mtlvxgrqlgspjd3g4v.preview.studio.arc.io/node_modules/.vite/deps/chunk-YI6NTZAD.js?v=ed645da4:22850:22)"}
+{"level":"debug","message":"[vite] hot updated: /src/index.css","timestamp":1792409434474}
+{"level":"debug","message":"[vite] hot updated: /src/pages/CampaignDetails.tsx","timestamp":1792409434474}
+{"level":"debug","message":"[vite] hot updated: /src/components/TxStatusBadge.tsx","timestamp":1792409434474}
+{"level":"debug","message":"[vite] hot updated: /src/pages/CreateCampaign.tsx","timestamp":1792409434474}
+{"level":"debug","message":"[vite] hot updated: /src/components/ContractModeBanner.tsx","timestamp":1792409434475}
+{"level":"debug","message":"[vite] hot updated: /src/pages/ReviewerDashboard.tsx","timestamp":1792409434475}
+{"level":"debug","message":"[vite] hot updated: /src/pages/TxExplorer.tsx","timestamp":1792409434475}
+{"level":"debug","message":"[vite] hot updated: /src/pages/ProofCenter.tsx","timestamp":1792409434475}
+{"level":"debug","message":"[vite] hot updated: /src/components/ContributePanel.tsx","timestamp":1792409434475}
+{"level":"debug","message":"[vite] hot updated: /src/pages/Landing.tsx","timestamp":1792409434475}
+{"level":"debug","message":"[vite] hot updated: /src/index.css","timestamp":1792409434743}
+{"level":"debug","message":"[vite] hot updated: /src/pages/CampaignDetails.tsx","timestamp":1792409434743}
+{"level":"debug","message":"[vite] hot updated: /src/components/TxStatusBadge.tsx","timestamp":1792409434744}
+{"level":"debug","message":"[vite] hot updated: /src/pages/CreateCampaign.tsx","timestamp":1792409434745}
+{"level":"debug","message":"[vite] hot updated: /src/components/ContractModeBanner.tsx","timestamp":1792409434746}
+{"level":"debug","message":"[vite] hot updated: /src/pages/ReviewerDashboard.tsx","timestamp":1792409434746}
+{"level":"debug","message":"[vite] hot updated: /src/pages/TxExplorer.tsx","timestamp":1792409434746}
+{"level":"debug","message":"[vite] hot updated: /src/pages/ProofCenter.tsx","timestamp":1792409434747}
+{"level":"debug","message":"[vite] hot updated: /src/components/ContributePanel.tsx","timestamp":1792409434747}
+{"level":"debug","message":"[vite] hot updated: /src/pages/Landing.tsx","timestamp":1792409434747}
+{"level":"debug","message":"[vite] hot updated: /src/index.css","timestamp":1792409480734}
+{"level":"debug","message":"[vite] hot updated: /src/pages/CampaignDetails.tsx","timestamp":1792409480734}
+{"level":"debug","message":"[vite] hot updated: /src/components/TxStatusBadge.tsx","timestamp":1792409480734}
+{"level":"debug","message":"[vite] hot updated: /src/pages/CreateCampaign.tsx","timestamp":1792409480735}
+{"level":"debug","message":"[vite] hot updated: /src/components/ContractModeBanner.tsx","timestamp":1792409480735}
+{"level":"debug","message":"[vite] hot updated: /src/pages/ReviewerDashboard.tsx","timestamp":1792409480735}
+{"level":"debug","message":"[vite] hot updated: /src/pages/TxExplorer.tsx","timestamp":1792409480735}
+{"level":"debug","message":"[vite] hot updated: /src/pages/ProofCenter.tsx","timestamp":1792409480735}
+{"level":"debug","message":"[vite] hot updated: /src/components/ContributePanel.tsx","timestamp":1792409480735}
+{"level":"debug","message":"[vite] hot updated: /src/pages/Landing.tsx","timestamp":1792409480736}
+{"level":"debug","message":"[vite] hot updated: /src/index.css","timestamp":1792409489346}
+{"level":"debug","message":"[vite] hot updated: /src/pages/CampaignDetails.tsx","timestamp":1792409489346}
+{"level":"debug","message":"[vite] hot updated: /src/components/TxStatusBadge.tsx","timestamp":1792409489347}
+{"level":"debug","message":"[vite] hot updated: /src/pages/CreateCampaign.tsx","timestamp":1792409489347}
+{"level":"debug","message":"[vite] hot updated: /src/components/ContractModeBanner.tsx","timestamp":1792409489347}
+{"level":"debug","message":"[vite] hot updated: /src/pages/ReviewerDashboard.tsx","timestamp":1792409489347}
+{"level":"debug","message":"[vite] hot updated: /src/pages/TxExplorer.tsx","timestamp":1792409489348}
+{"level":"debug","message":"[vite] hot updated: /src/pages/ProofCenter.tsx","timestamp":1792409489349}
+{"level":"debug","message":"[vite] hot updated: /src/components/ContributePanel.tsx","timestamp":1792409489349}
+{"level":"debug","message":"[vite] hot updated: /src/pages/Landing.tsx","timestamp":1792409489350}
+{"level":"debug","message":"[vite] hot updated: /src/index.css","timestamp":1792409494333}
+{"level":"debug","message":"[vite] hot updated: /src/pages/CampaignDetails.tsx","timestamp":1792409494333}
+{"level":"debug","message":"[vite] hot updated: /src/components/TxStatusBadge.tsx","timestamp":1792409494333}
+{"level":"debug","message":"[vite] hot updated: /src/pages/CreateCampaign.tsx","timestamp":1792409494333}
+{"level":"debug","message":"[vite] hot updated: /src/components/ContractModeBanner.tsx","timestamp":1792409494334}
+{"level":"debug","message":"[vite] hot updated: /src/pages/ReviewerDashboard.tsx","timestamp":1792409494334}
+{"level":"debug","message":"[vite] hot updated: /src/pages/TxExplorer.tsx","timestamp":1792409494334}
+{"level":"debug","message":"[vite] hot updated: /src/pages/ProofCenter.tsx","timestamp":1792409494334}
+{"level":"debug","message":"[vite] hot updated: /src/components/ContributePanel.tsx","timestamp":1792409494334}
+{"level":"debug","message":"[vite] hot updated: /src/pages/Landing.tsx","timestamp":1792409494335}
+{"level":"debug","message":"[vite] hot updated: /src/index.css","timestamp":1792409516668}
+{"level":"debug","message":"[vite] hot updated: /src/pages/CampaignDetails.tsx","timestamp":1792409516668}
+{"level":"debug","message":"[vite] hot updated: /src/components/TxStatusBadge.tsx","timestamp":1792409516668}
+{"level":"debug","message":"[vite] hot updated: /src/pages/CreateCampaign.tsx","timestamp":1792409516668}
+{"level":"debug","message":"[vite] hot updated: /src/components/ContractModeBanner.tsx","timestamp":1792409516668}
+{"level":"debug","message":"[vite] hot updated: /src/pages/ReviewerDashboard.tsx","timestamp":1792409516668}
+{"level":"debug","message":"[vite] hot updated: /src/pages/TxExplorer.tsx","timestamp":1792409516668}
+{"level":"debug","message":"[vite] hot updated: /src/pages/ProofCenter.tsx","timestamp":1792409516668}
+{"level":"debug","message":"[vite] hot updated: /src/components/ContributePanel.tsx","timestamp":1792409516668}
+{"level":"debug","message":"[vite] hot updated: /src/pages/Landing.tsx","timestamp":1792409516668}
+{"level":"debug","message":"[vite] hot updated: /src/index.css","timestamp":1792409523784}
+{"level":"debug","message":"[vite] hot updated: /src/pages/CampaignDetails.tsx","timestamp":1792409523785}
+{"level":"debug","message":"[vite] hot updated: /src/components/TxStatusBadge.tsx","timestamp":1792409523785}
+{"level":"debug","message":"[vite] hot updated: /src/pages/CreateCampaign.tsx","timestamp":1792409523785}
+{"level":"debug","message":"[vite] hot updated: /src/components/ContractModeBanner.tsx","timestamp":1792409523785}
+{"level":"debug","message":"[vite] hot updated: /src/pages/ReviewerDashboard.tsx","timestamp":1792409523785}
+{"level":"debug","message":"[vite] hot updated: /src/pages/TxExplorer.tsx","timestamp":1792409523785}
+{"level":"debug","message":"[vite] hot updated: /src/pages/ProofCenter.tsx","timestamp":1792409523786}
+{"level":"debug","message":"[vite] hot updated: /src/components/ContributePanel.tsx","timestamp":1792409523786}
+{"level":"debug","message":"[vite] hot updated: /src/pages/Landing.tsx","timestamp":1792409523786}
+{"level":"debug","message":"[vite] hot updated: /src/index.css","timestamp":1792409523787}
+{"level":"debug","message":"[vite] hot updated: /src/pages/CampaignDetails.tsx","timestamp":1792409523787}
+{"level":"debug","message":"[vite] hot updated: /src/components/TxStatusBadge.tsx","timestamp":1792409523787}
+{"level":"debug","message":"[vite] hot updated: /src/pages/CreateCampaign.tsx","timestamp":1792409523788}
+{"level":"debug","message":"[vite] hot updated: /src/components/ContractModeBanner.tsx","timestamp":1792409523789}
+{"level":"debug","message":"[vite] hot updated: /src/pages/ReviewerDashboard.tsx","timestamp":1792409523789}
+{"level":"debug","message":"[vite] hot updated: /src/pages/TxExplorer.tsx","timestamp":1792409523789}
+{"level":"debug","message":"[vite] hot updated: /src/pages/ProofCenter.tsx","timestamp":1792409523789}
+{"level":"debug","message":"[vite] hot updated: /src/components/ContributePanel.tsx","timestamp":1792409523790}
+{"level":"debug","message":"[vite] hot updated: /src/pages/Landing.tsx","timestamp":1792409523790}
+{"level":"error","message":"Warning: You are calling ReactDOMClient.createRoot() on a container that has already been passed to createRoot() before. Instead, call root.render() on the existing root instead if you want to update it.","timestamp":1792409644194}
+{"level":"debug","message":"[vite] invalidate /src/main.tsx: Could not Fast Refresh (\"true\" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports","timestamp":1792409644198}
+{"level":"debug","message":"[vite] hot updated: /src/main.tsx","timestamp":1792409644198}
+{"level":"debug","message":"[vite] hot updated: /src/index.css","timestamp":1792409644198}
+{"level":"error","message":"Warning: You are calling ReactDOMClient.createRoot() on a container that has already been passed to createRoot() before. Instead, call root.render() on the existing root instead if you want to update it.","timestamp":1792409653167}
+{"level":"debug","message":"[vite] invalidate /src/main.tsx: Could not Fast Refresh (\"true\" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports","timestamp":1792409653168}
+{"level":"debug","message":"[vite] hot updated: /src/main.tsx","timestamp":1792409653168}
+{"level":"debug","message":"[vite] hot updated: /src/index.css","timestamp":1792409653168}
+{"level":"debug","message":"(previous line repeated 3× more)","timestamp":1792409729199}
+{"level":"debug","message":"[vite] hot updated: /src/pages/CampaignDetails.tsx","timestamp":1792409729199}
+{"level":"debug","message":"[vite] hot updated: /src/components/TxStatusBadge.tsx","timestamp":1792409729199}
+{"level":"debug","message":"[vite] hot updated: /src/pages/CreateCampaign.tsx","timestamp":1792409729199}
+{"level":"debug","message":"[vite] hot updated: /src/components/ContractModeBanner.tsx","timestamp":1792409729199}
+{"level":"debug","message":"[vite] hot updated: /src/pages/ReviewerDashboard.tsx","timestamp":1792409729199}
+{"level":"debug","message":"[vite] hot updated: /src/pages/TxExplorer.tsx","timestamp":1792409729199}
+{"level":"debug","message":"[vite] hot updated: /src/pages/ProofCenter.tsx","timestamp":1792409729199}
+{"level":"debug","message":"[vite] hot updated: /src/components/ContributePanel.tsx","timestamp":1792409729199}
+{"level":"debug","message":"[vite] hot updated: /src/pages/Landing.tsx","timestamp":1792409729200}
+{"level":"debug","message":"[vite] hot updated: /src/pages/Dashboard.tsx","timestamp":1792409729200}
+{"level":"debug","message":"[vite] hot updated: /src/components/WrongNetworkBanner.tsx","timestamp":1792409729200}
+{"level":"debug","message":"(previous line repeated 3× more)","timestamp":1792409729471}
+{"level":"debug","message":"[vite] hot updated: /src/pages/CampaignDetails.tsx","timestamp":1792409729471}
+{"level":"debug","message":"[vite] hot updated: /src/components/TxStatusBadge.tsx","timestamp":1792409729471}
+{"level":"debug","message":"[vite] hot updated: /src/pages/CreateCampaign.tsx","timestamp":1792409729471}
+{"level":"debug","message":"[vite] hot updated: /src/components/ContractModeBanner.tsx","timestamp":1792409729471}
+{"level":"debug","message":"[vite] hot updated: /src/pages/ReviewerDashboard.tsx","timestamp":1792409729471}
+{"level":"debug","message":"[vite] hot updated: /src/pages/TxExplorer.tsx","timestamp":1792409729471}
+{"level":"debug","message":"[vite] hot updated: /src/pages/ProofCenter.tsx","timestamp":1792409729471}
+{"level":"debug","message":"[vite] hot updated: /src/components/ContributePanel.tsx","timestamp":1792409729471}
+{"level":"debug","message":"[vite] hot updated: /src/pages/Landing.tsx","timestamp":1792409729472}
+{"level":"debug","message":"[vite] hot updated: /src/pages/Dashboard.tsx","timestamp":1792409729472}
+{"level":"debug","message":"[vite] hot updated: /src/components/WrongNetworkBanner.tsx","timestamp":1792409729472}
+{"level":"debug","message":"[vite] hot updated: /src/components/ContractModeBanner.tsx","timestamp":1792409861618}
+{"level":"debug","message":"[vite] hot updated: /src/index.css","timestamp":1792409861618}
+{"level":"log","message":"[vite] server connection lost. Polling for restart...","timestamp":1792410358579}
+{"level":"debug","message":"[vite] hot updated: /src/index.css","timestamp":1792410790870}
+{"level":"debug","message":"[vite] hot updated: /src/components/WrongNetworkBanner.tsx","timestamp":1792410790871}
+{"level":"debug","message":"[vite] hot updated: /src/pages/Dashboard.tsx","timestamp":1792410790871}
+{"level":"debug","message":"[vite] hot updated: /src/pages/TxExplorer.tsx","timestamp":1792410790871}
+{"level":"debug","message":"[vite] hot updated: /src/components/ContractModeBanner.tsx","timestamp":1792410790871}
+{"level":"debug","message":"[vite] hot updated: /src/pages/CreateCampaign.tsx","timestamp":1792410790871}
+{"level":"debug","message":"[vite] hot updated: /src/pages/CampaignDetails.tsx","timestamp":1792410790872}
+{"level":"debug","message":"[vite] hot updated: /src/pages/Landing.tsx","timestamp":1792410790872}
+{"level":"debug","message":"[vite] hot updated: /src/pages/ProofCenter.tsx","timestamp":1792410790872}
+{"level":"debug","message":"[vite] hot updated: /src/pages/ReviewerDashboard.tsx","timestamp":1792410790873}
+{"level":"debug","message":"[vite] hot updated: /src/components/TxStatusBadge.tsx","timestamp":1792410790874}
+{"level":"debug","message":"[vite] hot updated: /src/components/ContributePanel.tsx","timestamp":1792410790875}
+{"level":"debug","message":"[vite] hot updated: /src/index.css","timestamp":1792410795930}
+{"level":"debug","message":"[vite] hot updated: /src/components/WrongNetworkBanner.tsx","timestamp":1792410795931}
+{"level":"debug","message":"[vite] hot updated: /src/pages/Dashboard.tsx","timestamp":1792410795931}
+{"level":"debug","message":"[vite] hot updated: /src/pages/TxExplorer.tsx","timestamp":1792410795931}
+{"level":"debug","message":"[vite] hot updated: /src/components/ContractModeBanner.tsx","timestamp":1792410795931}
+{"level":"debug","message":"[vite] hot updated: /src/pages/CreateCampaign.tsx","timestamp":1792410795931}
+{"level":"debug","message":"[vite] hot updated: /src/pages/CampaignDetails.tsx","timestamp":1792410795931}
+{"level":"debug","message":"[vite] hot updated: /src/pages/Landing.tsx","timestamp":1792410795931}
+{"level":"debug","message":"[vite] hot updated: /src/pages/ProofCenter.tsx","timestamp":1792410795931}
+{"level":"debug","message":"[vite] hot updated: /src/pages/ReviewerDashboard.tsx","timestamp":1792410795931}
+{"level":"debug","message":"[vite] hot updated: /src/components/TxStatusBadge.tsx","timestamp":1792410795931}
+{"level":"debug","message":"[vite] hot updated: /src/components/ContributePanel.tsx","timestamp":1792410795932}
+{"level":"log","message":"[vite] server connection lost. Polling for restart...","timestamp":1792412598375}

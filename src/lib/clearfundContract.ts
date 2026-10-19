@@ -2,25 +2,44 @@
  * ClearFund contract configuration and ABI.
  *
  * ─── HOW TO ACTIVATE ONCHAIN MODE ───────────────────────────────────────────
- * 1. Deploy ClearFundEscrow.sol to Arc Testnet (Phase 4).
- * 2. Set VITE_CLEARFUND_ESCROW_ADDRESS=0x<deployed_address> in .env
- * 3. Restart the dev server — Vite only reads .env at startup.
+ * Testnet (default):
+ *   VITE_CLEARFUND_ESCROW_ADDRESS=0x<deployed_address>
+ *   (VITE_CLEARFUND_CHAIN is absent or set to "testnet")
+ *
+ * Mainnet:
+ *   VITE_CLEARFUND_ESCROW_ADDRESS=0x<mainnet_deployed_address>
+ *   VITE_CLEARFUND_CHAIN=mainnet
+ *
+ * Restart the dev server after changing .env — Vite only reads .env at startup.
  *
  * While VITE_CLEARFUND_ESCROW_ADDRESS is absent or empty the app runs in
  * DEMO mode (localStorage only). All pages degrade gracefully.
  * ────────────────────────────────────────────────────────────────────────────
+ *
+ * Arc network parameters (verified against https://docs.arc.io Oct 2026):
+ *   Testnet chain ID : 5042002
+ *   Mainnet chain ID : 5042
+ *   Testnet RPC      : https://rpc.testnet.arc.io
+ *   Mainnet RPC      : https://rpc.mainnet.arc.io
+ *   Testnet explorer : https://testnet.arcscan.app  (also https://explorer.testnet.arc.io)
+ *   Mainnet explorer : https://explorer.arc.io
+ *   USDC (ERC-20)    : 0x3600000000000000000000000000000000000000  (6 decimals, both networks)
+ *   USDC (native gas): same address, 18 decimals precision — do NOT mix with ERC-20 units
+ * ────────────────────────────────────────────────────────────────────────────
  */
 
-import { arcTestnet } from 'viem/chains'
+import { arcTestnet, arc as arcMainnet } from 'viem/chains'
 import { getUsdc } from '@/onchain-facts'
 
-// ── Network ──────────────────────────────────────────────────────────────────
+// ── Network selection ─────────────────────────────────────────────────────────
+// Defaults to testnet. Set VITE_CLEARFUND_CHAIN=mainnet for production.
 
-export const CLEARFUND_CHAIN = arcTestnet
+const isMainnetMode = ((import.meta.env.VITE_CLEARFUND_CHAIN as string | undefined) ?? '').toLowerCase() === 'mainnet'
+export const CLEARFUND_CHAIN = isMainnetMode ? arcMainnet : arcTestnet
 
-/** USDC address on Arc Testnet (6 decimals). From @/onchain-facts. */
-const _usdcFact = getUsdc(arcTestnet.id)
-if (!_usdcFact) throw new Error('ClearFund: USDC address not found in onchain-facts for Arc Testnet')
+/** USDC ERC-20 address (6 decimals). Same on both Arc networks. */
+const _usdcFact = getUsdc(CLEARFUND_CHAIN.id) ?? getUsdc(arcTestnet.id)
+if (!_usdcFact) throw new Error('ClearFund: USDC address not found in onchain-facts for Arc network')
 export const USDC_ADDRESS: `0x${string}` = _usdcFact.address as `0x${string}`
 
 /**

@@ -50,19 +50,35 @@ ClearFund is a transparent milestone-based group funding platform on Arc. Suppor
 - `src/components/ContributePanel.tsx` — USDC contribution widget (testnet only)
 - `docs/phase4-integration-report.md` — Phase 4 documentation
 
-## Phase 1 Status (contract — NOT DEPLOYED)
+## Contract Deployment Status — LIVE on Arc Testnet
 
-- Contract: `contracts/ClearFundEscrow.sol`
-- Deployed address: NOT YET DEPLOYED (update after Phase 2 deploy)
-- Chain: Arc Testnet (Chain ID 5042002) — target for Phase 2
-- USDC: `0x3600000000000000000000000000000000000000` (Arc Testnet, 6 decimals)
-- Env var to add after deploy: `VITE_CLEARFUND_ESCROW_ADDRESS=0x<address>`
+| Field | Value |
+|-------|-------|
+| Contract | `contracts/ClearFundEscrow.sol` |
+| **Address** | **`0x3cfce9ad713a72ecd0a9f1199664fea8b4de209e`** |
+| **Deploy tx** | **`0x179fc72ff5cd0106e933957708d26a3affb1d4279497374a479d01718fe0d98f`** |
+| Deploy block | `68143548` |
+| Chain | Arc Testnet (Chain ID 5042002) |
+| Explorer | https://explorer.testnet.arc.io/address/0x3cfce9ad713a72ecd0a9f1199664fea8b4de209e |
+| Tx explorer | https://explorer.testnet.arc.io/tx/0x179fc72ff5cd0106e933957708d26a3affb1d4279497374a479d01718fe0d98f |
+| USDC | `0x3600000000000000000000000000000000000000` (6 decimals) |
+| Reviewer | `0x5B12Ce46C7194aD57d143bC22847224047b1Ef42` |
+| Owner | `0xa3039A54856ed74B5AEc999EeF3fc954Ab010Cf6` |
+| Deployed | 2026-10-19T11:44:38.168Z |
 
-## Contract Constructor Args (for deploy)
+**Active env vars (set in `.env`):**
+```
+VITE_CLEARFUND_ESCROW_ADDRESS=0x3cfce9ad713a72ecd0a9f1199664fea8b4de209e
+VITE_CLEARFUND_DEPLOY_BLOCK=68143548
+```
+
+**To activate on Vercel:** Settings → Environment Variables → add both vars above → redeploy.
+
+## Contract Constructor Args
 
 ```
 usdcToken:        0x3600000000000000000000000000000000000000
-initialReviewer:  <reviewer wallet address — must be set before deploy>
+initialReviewer:  0x5B12Ce46C7194aD57d143bC22847224047b1Ef42
 ```
 
 ## To Run

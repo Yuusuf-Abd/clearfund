@@ -16,6 +16,10 @@ optimizer = true
 optimizer_runs = 200
 
 [rpc_endpoints]
+# Arc — primary deployment targets
+arc_testnet = "https://rpc.testnet.arc.io"
+arc_mainnet = "https://rpc.mainnet.arc.io"
+# Other EVM networks
 ethereum = "https://ethereum-rpc.publicnode.com"
 sepolia = "https://ethereum-sepolia-rpc.publicnode.com"
 base = "https://base-rpc.publicnode.com"
@@ -23,3 +27,22 @@ base_sepolia = "https://base-sepolia-rpc.publicnode.com"
 arbitrum = "https://arbitrum-one-rpc.publicnode.com"
 polygon = "https://polygon-bor-rpc.publicnode.com"
 optimism = "https://optimism-rpc.publicnode.com"
+
+# ── Deploy commands (run from project root) ───────────────────────────────────
+# Testnet:
+#   forge create contracts/ClearFundEscrow.sol:ClearFundEscrow \
+#     --constructor-args 0x3600000000000000000000000000000000000000 <REVIEWER_ADDR> \
+#     --rpc-url arc_testnet --private-key $PRIVATE_KEY --broadcast
+#
+# Mainnet:
+#   forge create contracts/ClearFundEscrow.sol:ClearFundEscrow \
+#     --constructor-args 0x3600000000000000000000000000000000000000 <REVIEWER_ADDR> \
+#     --rpc-url arc_mainnet --private-key $PRIVATE_KEY --broadcast
+#
+# Verify (after deploy, replace $CONTRACT_ADDRESS):
+#   forge verify-contract $CONTRACT_ADDRESS contracts/ClearFundEscrow.sol:ClearFundEscrow \
+#     --chain-id 5042002 --verifier blockscout \
+#     --verifier-url https://testnet.arcscan.app/api/ \
+#     --constructor-args $(cast abi-encode "constructor(address,address)" \
+#         0x3600000000000000000000000000000000000000 <REVIEWER_ADDR>)
+# ─────────────────────────────────────────────────────────────────────────────

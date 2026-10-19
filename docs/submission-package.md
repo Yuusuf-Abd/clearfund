@@ -70,14 +70,20 @@ https://github.com/Yuusuf-Abd/clearfund
 **Contract Address (Arc Mainnet):**
 `[PLACEHOLDER — REQUIRED: 0x... after mainnet deployment]`
 
-**Contract Address (Arc Testnet):**
-`[PLACEHOLDER — set if deployed to testnet]`
+**Contract Address (Arc Testnet — VERIFIED LIVE):**
+`0x3cfce9ad713a72ecd0a9f1199664fea8b4de209e`
 
-**Deployment Transaction Hash:**
-`[PLACEHOLDER — from forge create output or explorer]`
+**Deployment Transaction Hash (Arc Testnet):**
+`0x179fc72ff5cd0106e933957708d26a3affb1d4279497374a479d01718fe0d98f`
 
-**Explorer Transaction URL:**
-`[PLACEHOLDER — https://explorer.arc.io/tx/0x... for mainnet, https://explorer.testnet.arc.io/tx/0x... for testnet]`
+**Explorer Contract URL (Arc Testnet):**
+https://explorer.testnet.arc.io/address/0x3cfce9ad713a72ecd0a9f1199664fea8b4de209e
+
+**Explorer Transaction URL (Arc Testnet):**
+https://explorer.testnet.arc.io/tx/0x179fc72ff5cd0106e933957708d26a3affb1d4279497374a479d01718fe0d98f
+
+**Explorer Transaction URL (Arc Mainnet):**
+`[PLACEHOLDER — https://explorer.arc.io/tx/0x... after mainnet deployment]`
 
 ---
 
@@ -93,7 +99,8 @@ https://github.com/Yuusuf-Abd/clearfund
 - [ ] Full application walkthrough (Landing → Dashboard → Campaign → ProofCenter → Reviewer → TxExplorer)
 - [ ] Campaign creation wizard
 - [ ] Reviewer approval flow
-- [BLOCKED] Mainnet USDC transaction evidence
+- [ ] Arc Testnet transaction evidence (testnet contract live — record before submitting)
+- [BLOCKED] Mainnet USDC transaction evidence (requires mainnet deployment)
 
 ---
 

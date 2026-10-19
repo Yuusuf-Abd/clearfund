@@ -96,12 +96,15 @@ function extractRevertReason(err: unknown): string {
 /**
  * Returns the current operating mode:
  * - 'demo'    : no contract configured → fully DEMO
- * - 'testnet' : contract configured on Arc Testnet
+ * - 'testnet' : contract configured on Arc Testnet (chain ID 5042002)
+ * - 'mainnet' : contract configured on Arc Mainnet (chain ID 5042)
  */
-export function useClearFundMode(): 'demo' | 'testnet' {
+export function useClearFundMode(): 'demo' | 'testnet' | 'mainnet' {
   const chainId = useChainId()
   if (!isContractDeployed()) return 'demo'
-  if (chainId === CLEARFUND_CHAIN.id) return 'testnet'
+  if (chainId === CLEARFUND_CHAIN.id) {
+    return CLEARFUND_CHAIN.testnet ? 'testnet' : 'mainnet'
+  }
   return 'demo'
 }
 
@@ -457,6 +460,12 @@ export function useContribute(): {
   const [tx, setTx] = useState<TxState>(IDLE_TX)
   const { writeContractAsync } = useWriteContract()
   const publicClient = usePublicClient()
+  const { isSuccess: rcptSuccess, isError: rcptError } = useWaitForTransactionReceipt({ hash: tx.txHash })
+
+  const contributeStage: TxStage =
+    tx.stage === 'pendingConfirmation' && rcptSuccess ? 'confirmed'
+    : tx.stage === 'pendingConfirmation' && rcptError  ? 'failed'
+    : tx.stage
 
   const contribute = useCallback(
     async (campaignId: bigint, amountUsdc: string) => {
@@ -514,12 +523,13 @@ export function useContribute(): {
   )
 
   const reset = useCallback(() => setTx(IDLE_TX), [])
-  return { tx, contribute, reset }
+  return { tx: { ...tx, stage: contributeStage }, contribute, reset }
 }
 
 /**
  * useSubmitEvidence — wraps submitEvidence.
  * Records an off-chain URI only; does NOT change milestone status.
+ * Awaits the receipt so the confirmed state is only set after the tx is mined.
  */
 export function useSubmitEvidence(): {
   tx: TxState
@@ -528,6 +538,12 @@ export function useSubmitEvidence(): {
 } {
   const [tx, setTx] = useState<TxState>(IDLE_TX)
   const { writeContractAsync } = useWriteContract()
+  const { isSuccess, isError } = useWaitForTransactionReceipt({ hash: tx.txHash })
+
+  const stage: TxStage =
+    tx.stage === 'pendingConfirmation' && isSuccess ? 'confirmed'
+    : tx.stage === 'pendingConfirmation' && isError  ? 'failed'
+    : tx.stage
 
   const submit = useCallback(
     async (campaignId: bigint, milestoneIndex: bigint, evidenceURI: string) => {
@@ -552,13 +568,14 @@ export function useSubmitEvidence(): {
   )
 
   const reset = useCallback(() => setTx(IDLE_TX), [])
-  return { tx, submit, reset }
+  return { tx: { ...tx, stage }, submit, reset }
 }
 
 /**
  * useReviewerActions — approveMilestone and revokeApproval.
  * The contract enforces reviewer-only access; the frontend check is a
  * UX hint only and must never replace the contract authorization.
+ * Receipt is awaited so confirmed state is only set after the tx is mined.
  */
 export function useReviewerActions(): {
   tx: TxState
@@ -568,6 +585,12 @@ export function useReviewerActions(): {
 } {
   const [tx, setTx] = useState<TxState>(IDLE_TX)
   const { writeContractAsync } = useWriteContract()
+  const { isSuccess, isError } = useWaitForTransactionReceipt({ hash: tx.txHash })
+
+  const stage: TxStage =
+    tx.stage === 'pendingConfirmation' && isSuccess ? 'confirmed'
+    : tx.stage === 'pendingConfirmation' && isError  ? 'failed'
+    : tx.stage
 
   const approve = useCallback(
     async (campaignId: bigint, milestoneIndex: bigint) => {
@@ -614,7 +637,7 @@ export function useReviewerActions(): {
   )
 
   const reset = useCallback(() => setTx(IDLE_TX), [])
-  return { tx, approve, revoke, reset }
+  return { tx: { ...tx, stage }, approve, revoke, reset }
 }
 
 /**
