@@ -20,7 +20,6 @@ import {
   useWaitForTransactionReceipt,
   useReadContract,
   useAccount,
-  useChainId,
   usePublicClient,
 } from 'wagmi'
 import { decodeEventLog } from 'viem'
@@ -95,17 +94,18 @@ function extractRevertReason(err: unknown): string {
 
 /**
  * Returns the current operating mode:
- * - 'demo'    : no contract configured → fully DEMO
- * - 'testnet' : contract configured on Arc Testnet (chain ID 5042002)
- * - 'mainnet' : contract configured on Arc Mainnet (chain ID 5042)
+ * - 'demo'    : no contract address configured → fully DEMO
+ * - 'testnet' : VITE_CLEARFUND_ESCROW_ADDRESS set, chain is Arc Testnet
+ * - 'mainnet' : VITE_CLEARFUND_ESCROW_ADDRESS set, chain is Arc Mainnet
+ *
+ * IMPORTANT: mode is determined by whether a contract address is configured,
+ * NOT by the connected wallet's current chain. A visitor without a wallet
+ * must still see the live contract data. The wallet chain is only used to
+ * gate write operations (handled by WrongNetworkBanner + write hook guards).
  */
 export function useClearFundMode(): 'demo' | 'testnet' | 'mainnet' {
-  const chainId = useChainId()
   if (!isContractDeployed()) return 'demo'
-  if (chainId === CLEARFUND_CHAIN.id) {
-    return CLEARFUND_CHAIN.testnet ? 'testnet' : 'mainnet'
-  }
-  return 'demo'
+  return CLEARFUND_CHAIN.testnet ? 'testnet' : 'mainnet'
 }
 
 // ── Read hooks ────────────────────────────────────────────────────────────────
