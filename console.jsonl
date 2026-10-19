@@ -1417,3 +1417,34 @@
 {"level":"debug","message":"[vite] hot updated: /src/index.css","timestamp":1792418406263}
 {"level":"debug","message":"[vite] connected.","timestamp":1792418576760}
 {"level":"debug","message":"[vite] connected.","timestamp":1792418606611}
+{"level":"error","message":"[vite] Failed to reload /src/components/TxStatusBadge.tsx. This could be due to syntax errors or importing non-existent modules. (see errors above)","timestamp":1792419827998}
+{"level":"error","message":"[vite] Failed to reload /src/pages/TxExplorer.tsx. This could be due to syntax errors or importing non-existent modules. (see errors above)","timestamp":1792419828002}
+{"level":"error","message":"[vite] Failed to reload /src/components/ContractModeBanner.tsx. This could be due to syntax errors or importing non-existent modules. (see errors above)","timestamp":1792419828003}
+{"level":"error","message":"[vite] Failed to reload /src/pages/CampaignDetails.tsx. This could be due to syntax errors or importing non-existent modules. (see errors above)","timestamp":1792419828004}
+{"level":"error","message":"[vite] Failed to reload /src/components/ContributePanel.tsx. This could be due to syntax errors or importing non-existent modules. (see errors above)","timestamp":1792419828006}
+{"level":"error","message":"[vite] Failed to reload /src/pages/ReviewerDashboard.tsx. This could be due to syntax errors or importing non-existent modules. (see errors above)","timestamp":1792419828008}
+{"level":"error","message":"[vite] Failed to reload /src/pages/Landing.tsx. This could be due to syntax errors or importing non-existent modules. (see errors above)","timestamp":1792419828024}
+{"level":"error","message":"[vite] Failed to reload /src/pages/CreateCampaign.tsx. This could be due to syntax errors or importing non-existent modules. (see errors above)","timestamp":1792419828271}
+{"level":"error","message":"[vite] Failed to reload /src/pages/ProofCenter.tsx. This could be due to syntax errors or importing non-existent modules. (see errors above)","timestamp":1792419831140}
+{"level":"debug","message":"[vite] hot updated: /src/index.css","timestamp":1792419831141}
+{"level":"debug","message":"[vite] hot updated: /src/pages/CampaignDetails.tsx","timestamp":1792419831142}
+{"level":"debug","message":"[vite] hot updated: /src/pages/TxExplorer.tsx","timestamp":1792419831143}
+{"level":"debug","message":"[vite] hot updated: /src/pages/ReviewerDashboard.tsx","timestamp":1792419831143}
+{"level":"debug","message":"[vite] hot updated: /src/components/ContractModeBanner.tsx","timestamp":1792419831144}
+{"level":"debug","message":"[vite] hot updated: /src/pages/CreateCampaign.tsx","timestamp":1792419831144}
+{"level":"debug","message":"[vite] hot updated: /src/pages/ProofCenter.tsx","timestamp":1792419831145}
+{"level":"debug","message":"[vite] hot updated: /src/pages/Landing.tsx","timestamp":1792419831146}
+{"level":"debug","message":"[vite] hot updated: /src/components/TxStatusBadge.tsx","timestamp":1792419831148}
+{"level":"debug","message":"[vite] hot updated: /src/components/ContributePanel.tsx","timestamp":1792419831150}
+{"level":"debug","message":"[vite] hot updated: /src/index.css","timestamp":1792419929113}
+{"level":"debug","message":"[vite] hot updated: /src/pages/CampaignDetails.tsx","timestamp":1792419929114}
+{"level":"debug","message":"[vite] hot updated: /src/pages/TxExplorer.tsx","timestamp":1792419929114}
+{"level":"debug","message":"[vite] hot updated: /src/pages/ReviewerDashboard.tsx","timestamp":1792419929114}
+{"level":"debug","message":"[vite] hot updated: /src/components/ContractModeBanner.tsx","timestamp":1792419929114}
+{"level":"debug","message":"[vite] hot updated: /src/pages/CreateCampaign.tsx","timestamp":1792419929114}
+{"level":"debug","message":"[vite] hot updated: /src/pages/ProofCenter.tsx","timestamp":1792419929114}
+{"level":"debug","message":"[vite] hot updated: /src/pages/Landing.tsx","timestamp":1792419929115}
+{"level":"debug","message":"[vite] hot updated: /src/components/TxStatusBadge.tsx","timestamp":1792419929115}
+{"level":"debug","message":"[vite] hot updated: /src/components/ContributePanel.tsx","timestamp":1792419929115}
+{"level":"debug","message":"[vite] connected.","timestamp":1792420115806}
+{"level":"debug","message":"[vite] connected.","timestamp":1792420116239}
