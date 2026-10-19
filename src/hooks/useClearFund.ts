@@ -110,6 +110,7 @@ function extractRevertReason(err: unknown): string {
  * without a wallet must still see the correct mode. Write-operation chain gating
  * is handled separately by WrongNetworkBanner + write hook guards.
  */
+
 export function useClearFundMode(): 'demo' | 'testnet' | 'mainnet' {
   if (!isContractDeployed()) return 'demo'
   if (isArcTestnet()) return 'testnet'
@@ -118,6 +119,7 @@ export function useClearFundMode(): 'demo' | 'testnet' | 'mainnet' {
   // silent interaction with an unexpected chain.
   return 'demo'
 }
+
 
 // ── Read hooks ────────────────────────────────────────────────────────────────
 
