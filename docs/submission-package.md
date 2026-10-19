@@ -55,7 +55,7 @@ The core problem: traditional crowdfunding gives backers no guarantee their fund
 `[PLACEHOLDER — REQUIRED: generate share link from Arc Studio]`
 
 **Public Application URL:**
-`[PLACEHOLDER — REQUIRED: deploy to Netlify/Vercel/HF and paste URL]`
+https://clearfund-five.vercel.app/
 
 **GitHub Repository URL:**
 https://github.com/Yuusuf-Abd/clearfund
@@ -140,7 +140,7 @@ React SPA (Vite + TypeScript)
 
 | Suite | Command | Result |
 |-------|---------|--------|
-| Foundry unit tests | `forge test` | 82/82 PASS |
+| Foundry unit tests | `forge test` | 82/82 PASS (84 total including 2 invariant) |
 | Foundry invariant tests | `forge test` | 2/2 PASS (256 runs × 128k calls) |
 | Foundry fuzz tests | `forge test` | 3 fuzz functions, all PASS |
 | Vitest unit tests | `bunx vitest run` | 24/24 PASS |

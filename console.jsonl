@@ -1174,3 +1174,6 @@
 {"level":"debug","message":"[vite] hot updated: /src/index.css","timestamp":1792354341801}
 {"level":"debug","message":"[vite] hot updated: /src/App.tsx","timestamp":1792354342149}
 {"level":"debug","message":"[vite] hot updated: /src/index.css","timestamp":1792354342149}
+{"level":"debug","message":"[vite] connected.","timestamp":1792356875929}
+{"level":"debug","message":"[vite] connected.","timestamp":1792357695892}
+{"level":"log","message":"[vite] server connection lost. Polling for restart...","timestamp":1792358851007}

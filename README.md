@@ -43,7 +43,7 @@ Traditional crowdfunding and grant systems release funds upfront with no mechani
 |---|---|
 | Blockchain | Arc Testnet (chain ID 5042002, USDC as native gas) |
 | Smart contract | Solidity 0.8.28, OpenZeppelin 5.1.0 |
-| Contract tests | Foundry (forge) — 79 tests |
+| Contract tests | Foundry (forge) — 84 tests |
 | Frontend | React 18, TypeScript, Vite |
 | Onchain hooks | wagmi v2, viem, ConnectKit |
 | USDC | ERC-20 on Arc Testnet (`0x3600000000000000000000000000000000000000`) |
@@ -182,7 +182,7 @@ forge test -vvv
 forge test --gas-report
 ```
 
-All 79 tests should pass (77 unit + 2 invariant fuzz tests).
+All 84 tests should pass (82 unit + 2 invariant tests).
 
 ---
 
@@ -218,7 +218,7 @@ forge create contracts/ClearFundEscrow.sol:ClearFundEscrow \
 |---|---|---|
 | **DEMO** | Default (no env vars set) | All data in localStorage. No wallet needed. Sample campaigns shown. |
 | **Arc Testnet** | Set `VITE_CLEARFUND_ESCROW_ADDRESS` | Wallet connect enabled. Real contract calls on Arc Testnet. Test USDC only. |
-| **Mainnet** | Not supported | ClearFund is a prototype — no mainnet deployment is planned or supported. |
+| **Arc Mainnet** | Deploy contract + set `VITE_CLEARFUND_ESCROW_ADDRESS` (mainnet chain ID 5042) | Live USDC escrow — requires independently audited contract and wallet funded with USDC for gas. |
 
 ---
 
@@ -249,7 +249,7 @@ forge create contracts/ClearFundEscrow.sol:ClearFundEscrow \
 | Item | Status |
 |---|---|
 | Contract source | ✅ Complete |
-| Foundry tests (79/79) | ✅ Passing |
+| Foundry tests (84/84) | ✅ Passing |
 | Arc Testnet deployment | ❌ Blocked — deployer wallet gas cap |
 | Frontend (DEMO mode) | ✅ Fully functional |
 | Frontend (Testnet mode) | ⚠️ Wired — requires deployed contract |
@@ -262,7 +262,7 @@ forge create contracts/ClearFundEscrow.sol:ClearFundEscrow \
 ```
 ├── contracts/
 │   ├── ClearFundEscrow.sol          # Main escrow contract
-│   ├── test/ClearFundEscrow.t.sol   # 79 Foundry tests
+│   ├── test/ClearFundEscrow.t.sol   # 84 Foundry tests
 │   └── test-helpers/MockERC20.sol   # 6-decimal mock USDC for tests
 ├── src/
 │   ├── components/                  # Reusable UI components

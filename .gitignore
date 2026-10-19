@@ -42,3 +42,8 @@ Thumbs.db
 
 # Bun
 .bun/
+
+# Arc Studio runtime capture files (sandbox-only, not source)
+*.jsonl
+traces.jsonl
+console.jsonl
