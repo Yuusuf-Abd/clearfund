@@ -12,7 +12,7 @@
 
 import { useAccount, useChainId, useSwitchChain } from 'wagmi'
 import { AlertTriangle } from 'lucide-react'
-import { isContractDeployed, CLEARFUND_CHAIN } from '@/lib/clearfundContract'
+import { isContractDeployed, CLEARFUND_CHAIN, ARC_TESTNET_CHAIN_ID, ARC_MAINNET_CHAIN_ID } from '@/lib/clearfundContract'
 
 export function WrongNetworkBanner() {
   const { isConnected } = useAccount()
@@ -21,6 +21,11 @@ export function WrongNetworkBanner() {
 
   if (!isContractDeployed()) return null
   if (!isConnected) return null
+  // Confirm the configured chain is a known Arc network before offering a switch.
+  const isKnownArcChain =
+    CLEARFUND_CHAIN.id === ARC_TESTNET_CHAIN_ID ||
+    CLEARFUND_CHAIN.id === ARC_MAINNET_CHAIN_ID
+  if (!isKnownArcChain) return null
   if (chainId === CLEARFUND_CHAIN.id) return null
 
   return (

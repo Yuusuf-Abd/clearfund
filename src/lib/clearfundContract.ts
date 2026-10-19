@@ -31,11 +31,23 @@
 import { arcTestnet, arc as arcMainnet } from 'viem/chains'
 import { getUsdc } from '@/onchain-facts'
 
+// ── Canonical Arc chain IDs ───────────────────────────────────────────────────
+// Use these constants everywhere instead of magic numbers or the optional
+// `chain.testnet` boolean (which viem's mainnet chain omits).
+export const ARC_TESTNET_CHAIN_ID = 5042002 as const
+export const ARC_MAINNET_CHAIN_ID = 5042 as const
+
 // ── Network selection ─────────────────────────────────────────────────────────
 // Defaults to testnet. Set VITE_CLEARFUND_CHAIN=mainnet for production.
 
 const isMainnetMode = ((import.meta.env.VITE_CLEARFUND_CHAIN as string | undefined) ?? '').toLowerCase() === 'mainnet'
 export const CLEARFUND_CHAIN = isMainnetMode ? arcMainnet : arcTestnet
+
+/** True when the configured chain is Arc Testnet (chain ID 5042002). */
+export const isArcTestnet = (): boolean => CLEARFUND_CHAIN.id === ARC_TESTNET_CHAIN_ID
+
+/** True when the configured chain is Arc Mainnet (chain ID 5042). */
+export const isArcMainnet = (): boolean => CLEARFUND_CHAIN.id === ARC_MAINNET_CHAIN_ID
 
 /** USDC ERC-20 address (6 decimals). Same on both Arc networks. */
 const _usdcFact = getUsdc(CLEARFUND_CHAIN.id) ?? getUsdc(arcTestnet.id)

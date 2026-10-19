@@ -31,6 +31,8 @@ import {
   USDC_ADDRESS,
   CLEARFUND_CHAIN,
   isContractDeployed,
+  isArcTestnet,
+  isArcMainnet,
   MilestoneStatus,
   type MilestoneStatusValue,
 } from '../lib/clearfundContract'
@@ -95,17 +97,26 @@ function extractRevertReason(err: unknown): string {
 /**
  * Returns the current operating mode:
  * - 'demo'    : no contract address configured → fully DEMO
- * - 'testnet' : VITE_CLEARFUND_ESCROW_ADDRESS set, chain is Arc Testnet
- * - 'mainnet' : VITE_CLEARFUND_ESCROW_ADDRESS set, chain is Arc Mainnet
+ * - 'testnet' : VITE_CLEARFUND_ESCROW_ADDRESS set, CLEARFUND_CHAIN.id === 5042002
+ * - 'mainnet' : VITE_CLEARFUND_ESCROW_ADDRESS set, CLEARFUND_CHAIN.id === 5042
  *
- * IMPORTANT: mode is determined by whether a contract address is configured,
- * NOT by the connected wallet's current chain. A visitor without a wallet
- * must still see the live contract data. The wallet chain is only used to
- * gate write operations (handled by WrongNetworkBanner + write hook guards).
+ * Uses canonical Arc chain IDs (ARC_TESTNET_CHAIN_ID / ARC_MAINNET_CHAIN_ID)
+ * rather than the optional `chain.testnet` boolean property, which viem omits
+ * from its Arc Mainnet chain definition and which would silently misidentify
+ * the network when that property is absent.
+ *
+ * IMPORTANT: mode is determined by the contract address configuration and the
+ * configured chain ID — NOT by the connected wallet's current chain. A visitor
+ * without a wallet must still see the correct mode. Write-operation chain gating
+ * is handled separately by WrongNetworkBanner + write hook guards.
  */
 export function useClearFundMode(): 'demo' | 'testnet' | 'mainnet' {
   if (!isContractDeployed()) return 'demo'
-  return CLEARFUND_CHAIN.testnet ? 'testnet' : 'mainnet'
+  if (isArcTestnet()) return 'testnet'
+  if (isArcMainnet()) return 'mainnet'
+  // Configured chain is neither known Arc network — treat as demo to prevent
+  // silent interaction with an unexpected chain.
+  return 'demo'
 }
 
 // ── Read hooks ────────────────────────────────────────────────────────────────
