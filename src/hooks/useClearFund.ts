@@ -20,7 +20,6 @@ import {
   useWaitForTransactionReceipt,
   useReadContract,
   useAccount,
-  useChainId,
   usePublicClient,
 } from 'wagmi'
 import { decodeEventLog } from 'viem'
@@ -99,14 +98,12 @@ function extractRevertReason(err: unknown): string {
  * - 'testnet' : contract configured on Arc Testnet (chain ID 5042002)
  * - 'mainnet' : contract configured on Arc Mainnet (chain ID 5042)
  */
+
 export function useClearFundMode(): 'demo' | 'testnet' | 'mainnet' {
-  const chainId = useChainId()
   if (!isContractDeployed()) return 'demo'
-  if (chainId === CLEARFUND_CHAIN.id) {
-    return CLEARFUND_CHAIN.testnet ? 'testnet' : 'mainnet'
-  }
-  return 'demo'
+  return CLEARFUND_CHAIN.testnet ? 'testnet' : 'mainnet'
 }
+
 
 // ── Read hooks ────────────────────────────────────────────────────────────────
 
