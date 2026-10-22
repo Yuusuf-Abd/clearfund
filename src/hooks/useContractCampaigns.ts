@@ -23,6 +23,7 @@ import { getIndexerBatchEnd } from '../lib/indexerBatch'
 import { getIndexerResumeState } from '../lib/indexerResume'
 import { withRpcRetry } from '../lib/indexerRpcRetry'
 import { shouldRebuildIndexer } from '../lib/indexerReorg'
+import { createScanGeneration } from '../lib/indexerScanGeneration'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -105,12 +106,13 @@ export function useContractCampaigns(): IndexerState {
     chainHead: 0n,
     error: undefined,
   })
-  const abortRef = useRef(false)
+  const scanGenerationRef = useRef(createScanGeneration())
 
   const scan = useCallback(async () => {
     if (!isContractDeployed()) return
 
-    abortRef.current = false
+    const generation = scanGenerationRef.current.begin()
+    const isStale = () => !scanGenerationRef.current.isCurrent(generation)
     setState((s) => ({ ...s, isLoading: true, error: undefined }))
 
     // Build a public client for the configured Arc network using the proxy when available.
@@ -139,14 +141,14 @@ export function useContractCampaigns(): IndexerState {
       const observedHash = lastScanned !== undefined && lastScanned <= head
         ? (await withRpcRetry(() => client.getBlock({ blockNumber: lastScanned }))).hash
         : undefined
-      if (abortRef.current) return
+      if (isStale()) return
       const rebuild = shouldRebuildIndexer(lastScanned, head, savedHash, observedHash)
       const resume = getIndexerResumeState(deployBlock, head, rebuild ? undefined : lastScanned, rebuild ? [] : cachedIds)
       let fromBlock = resume.fromBlock
       const newIds = resume.ids
 
       while (fromBlock <= head) {
-        if (abortRef.current) return
+        if (isStale()) return
         const toBlock = getIndexerBatchEnd(fromBlock, head, BATCH_SIZE)
 
         const logs = await withRpcRetry(() => client.getLogs({
@@ -156,7 +158,7 @@ export function useContractCampaigns(): IndexerState {
           toBlock,
         }))
         // The hook may unmount while an RPC request is pending.
-        if (abortRef.current) return
+        if (isStale()) return
 
         for (const log of logs) {
           if (log.args.campaignId !== undefined) newIds.add(log.args.campaignId)
@@ -167,14 +169,14 @@ export function useContractCampaigns(): IndexerState {
       }
 
       // Do not commit a scan from an unmounted or superseded hook.
-      if (abortRef.current) return
+      if (isStale()) return
 
       // 2. Load full campaign data for every discovered ID.
       // Keep the previous cursor until all reads succeed so a transient RPC
       // failure cannot mark an incomplete refresh as successfully indexed.
       const loaded: IndexedCampaign[] = []
       for (const id of newIds) {
-        if (abortRef.current) return
+        if (isStale()) return
         try {
           const [rawCampaign, rawBalance] = await Promise.all([
             withRpcRetry(() => client.readContract({
@@ -190,7 +192,7 @@ export function useContractCampaigns(): IndexerState {
               args: [id],
             })),
           ])
-          if (abortRef.current) return
+          if (isStale()) return
           const [organizer, recipient, target, metadataURI, totalContributed, totalPaidOut, active, milestoneCount, totalAllocated] = rawCampaign as [
             `0x${string}`, `0x${string}`, bigint, string, bigint, bigint, boolean, bigint, bigint
           ]
@@ -200,19 +202,19 @@ export function useContractCampaigns(): IndexerState {
             balance: rawBalance as bigint,
           })
         } catch (err) {
-          if (abortRef.current) return
+          if (isStale()) return
           // A temporary RPC failure must not silently turn a real campaign
           // into a missing row while reporting a successful index.
           throw new Error(`Unable to load campaign ${id.toString()}: ${err instanceof Error ? err.message : 'RPC error'}`)
         }
       }
 
-      if (abortRef.current) return
+      if (isStale()) return
 
       // Commit the cache only after the event scan AND campaign reads succeed.
       // Never advance a cursor for a failed or abandoned refresh.
       const checkpointHash = (await withRpcRetry(() => client.getBlock({ blockNumber: head }))).hash
-      if (abortRef.current) return
+      if (isStale()) return
       // Store the hash before the cursor: interrupted writes trigger a safe
       // rebuild on the next refresh rather than trusting an unverified cursor.
       try { localStorage.setItem(LS_BLOCK_HASH_KEY, checkpointHash) } catch { /* ignore */ }
@@ -230,7 +232,7 @@ export function useContractCampaigns(): IndexerState {
         error: undefined,
       })
     } catch (err) {
-      if (abortRef.current) return
+      if (isStale()) return
       const msg = (err as { message?: string }).message?.slice(0, 200) ?? 'RPC error'
       setState((s) => ({ ...s, isLoading: false, error: msg }))
     }
@@ -240,7 +242,7 @@ export function useContractCampaigns(): IndexerState {
     if (!isContractDeployed()) return
     // oxlint-disable-next-line react/set-state-in-effect -- legitimate external-system sync (RPC fetch)
     void scan()
-    return () => { abortRef.current = true }
+    return () => { scanGenerationRef.current.invalidate() }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scan])
 
