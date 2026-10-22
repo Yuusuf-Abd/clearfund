@@ -164,11 +164,9 @@ export function useContractCampaigns(): IndexerState {
       // Do not commit a scan from an unmounted or superseded hook.
       if (abortRef.current) return
 
-      // Persist IDs before advancing the cursor so refreshes never lose campaigns.
-      saveCampaignIds(newIds)
-      saveLastBlock(head)
-
-      // 2. Load full campaign data for every discovered ID
+      // 2. Load full campaign data for every discovered ID.
+      // Keep the previous cursor until all reads succeed so a transient RPC
+      // failure cannot mark an incomplete refresh as successfully indexed.
       const loaded: IndexedCampaign[] = []
       for (const id of newIds) {
         if (abortRef.current) return
@@ -201,6 +199,13 @@ export function useContractCampaigns(): IndexerState {
           throw new Error(`Unable to load campaign ${id.toString()}: ${err instanceof Error ? err.message : 'RPC error'}`)
         }
       }
+
+      if (abortRef.current) return
+
+      // Commit the cache only after the event scan AND campaign reads succeed.
+      // Never advance a cursor for a failed or abandoned refresh.
+      saveCampaignIds(newIds)
+      saveLastBlock(head)
 
       // Sort by campaign ID descending (newest first)
       loaded.sort((a, b) => (a.onchainId > b.onchainId ? -1 : 1))
