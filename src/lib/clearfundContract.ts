@@ -29,6 +29,7 @@
  */
 
 import { arcTestnet, arc as arcMainnet } from 'viem/chains'
+import { isAddress, zeroAddress } from 'viem'
 import { getUsdc } from '@/onchain-facts'
 
 // ── Canonical Arc chain IDs ───────────────────────────────────────────────────
@@ -68,11 +69,11 @@ export const ESCROW_ADDRESS = (
   import.meta.env.VITE_CLEARFUND_ESCROW_ADDRESS || ''
 ) as `0x${string}` | ''
 
-/** True when a valid contract address is configured. */
+/** True when a syntactically valid nonzero escrow address is configured. This does not prove contract deployment. */
 export const isContractDeployed = (): boolean =>
   typeof ESCROW_ADDRESS === 'string' &&
-  ESCROW_ADDRESS.startsWith('0x') &&
-  ESCROW_ADDRESS.length === 42
+  isAddress(ESCROW_ADDRESS) &&
+  ESCROW_ADDRESS.toLowerCase() !== zeroAddress
 
 // ── ABI ──────────────────────────────────────────────────────────────────────
 // Derived directly from the compiled contract. Every function, event, and
