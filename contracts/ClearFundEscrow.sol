@@ -42,8 +42,8 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
  *   - Owner can change reviewer: owner key compromise means a new reviewer can be set.
  *     Use a multi-sig or timelock as the owner for production deployments.
  *   - No funding deadline: campaigns do not expire. Organizer must cancel manually.
- *   - No contributor refunds on milestone over-payout: if totalPaidOut ever exceeded
- *     totalContributed (impossible given per-campaign balance accounting, but noted).
+ *   - Cancellation is unavailable after any milestone payout; remaining funds
+ *     stay committed to the active campaign. A separate closure policy is needed.
  *   - This contract has NOT been independently audited. Do not hold real funds without
  *     a professional third-party audit.
  */
@@ -133,6 +133,7 @@ contract ClearFundEscrow is Ownable, ReentrancyGuard {
     error MilestoneAllocationExceeded();
     error TooManyMilestones();
     error ApprovedMilestoneBlocksCancel();
+    error PayoutAlreadyMadeBlocksCancel();
     error InvalidMilestoneIndex();
     error InvalidMilestoneStatus(MilestoneStatus expected, MilestoneStatus actual);
     error MilestoneAlreadyPaid();
@@ -244,7 +245,8 @@ contract ClearFundEscrow is Ownable, ReentrancyGuard {
      * @notice Cancels an active campaign.
      * @dev    After cancellation contributors may call claimRefund().
      *         No new contributions or milestones are accepted.
-     *         Cancellation is BLOCKED when any milestone is in Approved status.
+     *         Cancellation is BLOCKED after any payout, or while any milestone
+     *         is in Approved status.
      *         Reason: releaseMilestone requires active=true, so an Approved milestone
      *         on a cancelled campaign is permanently un-releasable, and because a
      *         payout has been earmarked, contributors who contributed less than the
@@ -258,6 +260,11 @@ contract ClearFundEscrow is Ownable, ReentrancyGuard {
         _requireValidCampaign(campaign);
         if (campaign.organizer != msg.sender) revert NotOrganizer();
         if (!campaign.active) revert CampaignInactive();
+
+        // Once funds have been paid out, full original contribution refunds
+        // cannot be guaranteed. Prevent cancellation rather than allowing
+        // order-dependent, undercollateralized refund claims.
+        if (campaign.totalPaidOut != 0) revert PayoutAlreadyMadeBlocksCancel();
 
         // Block cancellation while any milestone is Approved but not yet Paid.
         // This prevents USDC from being permanently locked in the escrow.
@@ -332,8 +339,8 @@ contract ClearFundEscrow is Ownable, ReentrancyGuard {
      * @dev    Only callable when the campaign is inactive (cancelled).
      *         Zeroes the contributor's record before transferring to prevent double-refund.
      *         Uses checks-effects-interactions and nonReentrant guard.
-     *         Does NOT refund contributions that were already consumed by a milestone
-     *         payout — campaignBalance accounts for payouts automatically.
+     *         Cancellation is forbidden after a payout, so every contributor's
+     *         full original claim remains backed by that campaign's balance.
      *         Cross-campaign isolation: only `campaignBalance[campaignId]` is touched;
      *         no other campaign's balance can be spent here.
      * @param campaignId  ID of the cancelled campaign.
@@ -348,11 +355,8 @@ contract ClearFundEscrow is Ownable, ReentrancyGuard {
         if (refundAmount == 0) revert NothingToRefund();
 
         // Revert if campaign balance cannot cover this contributor's full entitlement.
-        // This happens when milestones were released before cancellation consumed part
-        // of the balance. Reverting is honest: the contributor's record is NOT zeroed,
-        // preserving their claim in case the organizer later restores funds (unlikely,
-        // but correct). The organizer should release all approved milestones BEFORE
-        // cancelling if they want to maximise refundability.
+        // Defense in depth: cancellation forbids prior payouts, so under normal
+        // token behavior this balance is sufficient for every contributor.
         if (campaignBalance[campaignId] < refundAmount) revert InsufficientRefundBalance();
 
         // Checks-effects-interactions: decrement state before transfer.
