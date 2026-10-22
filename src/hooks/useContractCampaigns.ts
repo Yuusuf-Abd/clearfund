@@ -21,6 +21,7 @@ import { createPublicClient, http, parseAbiItem } from 'viem'
 import { CLEARFUND_CHAIN, ESCROW_ADDRESS, CLEARFUND_ESCROW_ABI, isContractDeployed } from '../lib/clearfundContract'
 import { getIndexerBatchEnd } from '../lib/indexerBatch'
 import { getIndexerResumeState } from '../lib/indexerResume'
+import { withRpcRetry } from '../lib/indexerRpcRetry'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -124,7 +125,7 @@ export function useContractCampaigns(): IndexerState {
 
     try {
       // 1. Get chain head — never crawl from 0
-      const head = await client.getBlockNumber()
+      const head = await withRpcRetry(() => client.getBlockNumber())
       const deployBlock = getDeployBlock(head)
       const cachedIds = loadCampaignIds()
       // Old cursor-only caches cannot reconstruct previous campaigns; rescan once.
@@ -138,12 +139,12 @@ export function useContractCampaigns(): IndexerState {
         if (abortRef.current) return
         const toBlock = getIndexerBatchEnd(fromBlock, head, BATCH_SIZE)
 
-        const logs = await client.getLogs({
+        const logs = await withRpcRetry(() => client.getLogs({
           address: ESCROW_ADDRESS as `0x${string}`,
           event: CAMPAIGN_CREATED_EVENT,
           fromBlock,
           toBlock,
-        })
+        }))
         // The hook may unmount while an RPC request is pending.
         if (abortRef.current) return
 
@@ -166,12 +167,12 @@ export function useContractCampaigns(): IndexerState {
         if (abortRef.current) return
         try {
           const [rawCampaign, rawBalance] = await Promise.all([
-            client.readContract({
+            withRpcRetry(() => client.readContract({
               address: ESCROW_ADDRESS as `0x${string}`,
               abi: CLEARFUND_ESCROW_ABI,
               functionName: 'campaigns',
               args: [id],
-            }),
+            })),
             client.readContract({
               address: ESCROW_ADDRESS as `0x${string}`,
               abi: CLEARFUND_ESCROW_ABI,
