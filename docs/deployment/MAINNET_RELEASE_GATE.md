@@ -8,7 +8,7 @@
 - [x] Frontend Vitest tests (44 passed on commit 8ffc79b)
 - [x] Foundry Solidity tests and invariant suite passed on commit `ca920d3` (GitHub Actions run `39850722862`)
 - [x] Mainnet-configured frontend production build
-- [x] GitHub Actions run `39852822322` on commit `e2bef02`: frontend and contracts jobs both passed, including the cancelled-campaign milestone mutation regression
+- [x] GitHub Actions run `39853877013` on commit `85cc20e`: frontend and contracts jobs both passed, including the recipient-change cancellation regression and indexer improvements (verified before merge)
 
 ## Evidence required before promoting to production
 
@@ -24,9 +24,9 @@
 
 ## Contract security review — release blockers
 
-**Refund solvency after partial payouts (mitigation CI-verified):** `claimRefund` retains each contributor's original full `contributions[campaignId][address]` entitlement, while `releaseMilestone` reduces the shared `campaignBalance[campaignId]`. The original implementation allowed cancellation after partial payouts, producing undercollateralized refund claims. The branch now rejects cancellation after any payout using `PayoutAlreadyMadeBlocksCancel`, and regression tests cover this policy. This prevents the documented shortfall through the cancellation path but means partially paid campaigns cannot be cancelled. **This is a product-policy trade-off, not a full security audit.** CI passed at `ca920d3`; independently review before release.
+**Refund solvency after partial payouts (mitigation CI-verified):** `claimRefund` retains each contributor's original full `contributions[campaignId][address]` entitlement, while `releaseMilestone` reduces the shared `campaignBalance[campaignId]`. The original implementation allowed cancellation after partial payouts, producing undercollateralized refund claims. The merged contract now rejects cancellation after any payout using `PayoutAlreadyMadeBlocksCancel`, and regression tests cover this policy. This prevents the documented shortfall through the cancellation path but means partially paid campaigns cannot be cancelled. **This is a product-policy trade-off, not a full security audit.** CI passed at `ca920d3`; independently review before release.
 
-**Cancelled campaign lifecycle (CI-verified):** Evidence submission, completion, reviewer approval and approval revocation now reject inactive campaigns with `CampaignInactive`. Regression coverage passed in run `39852822322`. `updateRecipient` still permits changes on an inactive campaign with remaining balance; this does not authorize payout but merits a separate product-policy review.
+**Cancelled campaign lifecycle (CI-verified):** Evidence submission, completion, reviewer approval and approval revocation now reject inactive campaigns with `CampaignInactive`. Regression coverage passed in run `39852822322`. `updateRecipient` now rejects all inactive campaigns, including funded cancelled campaigns. The regression test verifies that the recipient and escrow balance remain unchanged. CI passed in run `39853183086`.
 
 **Governance concentration:** `reviewer` is one globally authorized address and the `owner` can replace it. The threat model is documented in [REVIEWER_GOVERNANCE.md](./REVIEWER_GOVERNANCE.md). Key custody, outstanding approvals during rotation, and incident response still require independent review before production.
 
