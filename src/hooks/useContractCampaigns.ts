@@ -24,6 +24,7 @@ import { getIndexerResumeState } from '../lib/indexerResume'
 import { withRpcRetry } from '../lib/indexerRpcRetry'
 import { shouldRebuildIndexer } from '../lib/indexerReorg'
 import { createScanGeneration } from '../lib/indexerScanGeneration'
+import { decodeIndexerCheckpoint, encodeIndexerCheckpoint } from '../lib/indexerCheckpoint'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -52,9 +53,7 @@ export interface IndexerState {
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 const INDEXER_SCOPE = `${CLEARFUND_CHAIN.id}_${ESCROW_ADDRESS.toLowerCase()}`
-const LS_LAST_BLOCK_KEY = `clearfund_indexer_last_block_${INDEXER_SCOPE}`
-const LS_CAMPAIGN_IDS_KEY = `clearfund_indexer_campaign_ids_${INDEXER_SCOPE}`
-const LS_BLOCK_HASH_KEY = `clearfund_indexer_block_hash_${INDEXER_SCOPE}`
+const LS_CHECKPOINT_KEY = `clearfund_indexer_checkpoint_${INDEXER_SCOPE}`
 const BATCH_SIZE = 2_000n
 const LOOKBACK = 50_000n   // default lookback when deploy block is unknown
 
@@ -66,30 +65,17 @@ function getDeployBlock(head: bigint): bigint {
   return head > LOOKBACK ? head - LOOKBACK : 0n
 }
 
-function loadLastBlock(): bigint | undefined {
+function loadCheckpoint() {
+  try { return decodeIndexerCheckpoint(localStorage.getItem(LS_CHECKPOINT_KEY)) }
+  catch { return undefined }
+}
+
+function saveCheckpoint(cursor: bigint, hash: string, ids: Set<bigint>) {
   try {
-    const v = localStorage.getItem(LS_LAST_BLOCK_KEY)
-    if (v) return BigInt(v)
-  } catch { /* ignore */ }
-  return undefined
-}
-
-function saveLastBlock(block: bigint) {
-  try { localStorage.setItem(LS_LAST_BLOCK_KEY, String(block)) } catch { /* ignore */ }
-}
-
-function loadCampaignIds(): bigint[] {
-  try {
-    const stored = localStorage.getItem(LS_CAMPAIGN_IDS_KEY)
-    if (!stored) return []
-    const parsed: unknown = JSON.parse(stored)
-    if (!Array.isArray(parsed)) return []
-    return parsed.filter((id): id is string => typeof id === 'string' && /^\d+$/.test(id)).map((id) => BigInt(id))
-  } catch { return [] }
-}
-
-function saveCampaignIds(ids: Set<bigint>) {
-  try { localStorage.setItem(LS_CAMPAIGN_IDS_KEY, JSON.stringify([...ids].map(String))) } catch { /* ignore */ }
+    localStorage.setItem(LS_CHECKPOINT_KEY, encodeIndexerCheckpoint({
+      cursor, hash, ids: [...ids],
+    }))
+  } catch { /* cache unavailable; scan results remain usable */ }
 }
 
 const CAMPAIGN_CREATED_EVENT = parseAbiItem(
@@ -131,13 +117,14 @@ export function useContractCampaigns(): IndexerState {
       // 1. Get chain head — never crawl from 0
       const head = await withRpcRetry(() => client.getBlockNumber())
       const deployBlock = getDeployBlock(head)
-      const cachedIds = loadCampaignIds()
-      // Old cursor-only caches cannot reconstruct previous campaigns; rescan once.
-      const lastScanned = loadLastBlock()
+      // Legacy multi-key caches are intentionally ignored and rebuilt once.
+      const checkpoint = loadCheckpoint()
+      const cachedIds = checkpoint?.ids ?? []
+      const lastScanned = checkpoint?.cursor
       // Discard cached IDs if the chain head rolled behind the saved cursor.
       // Validate the previously scanned block against the current canonical chain.
       // A changed hash detects a shallow reorg even when the chain head increases.
-      const savedHash = localStorage.getItem(LS_BLOCK_HASH_KEY) ?? undefined
+      const savedHash = checkpoint?.hash
       const observedHash = lastScanned !== undefined && lastScanned <= head
         ? (await withRpcRetry(() => client.getBlock({ blockNumber: lastScanned }))).hash
         : undefined
@@ -215,11 +202,7 @@ export function useContractCampaigns(): IndexerState {
       // Never advance a cursor for a failed or abandoned refresh.
       const checkpointHash = (await withRpcRetry(() => client.getBlock({ blockNumber: head }))).hash
       if (isStale()) return
-      // Store the hash before the cursor: interrupted writes trigger a safe
-      // rebuild on the next refresh rather than trusting an unverified cursor.
-      try { localStorage.setItem(LS_BLOCK_HASH_KEY, checkpointHash) } catch { /* ignore */ }
-      saveCampaignIds(newIds)
-      saveLastBlock(head)
+      saveCheckpoint(head, checkpointHash, newIds)
 
       // Sort by campaign ID descending (newest first)
       loaded.sort((a, b) => (a.onchainId > b.onchainId ? -1 : 1))
