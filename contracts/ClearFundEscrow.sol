@@ -387,6 +387,7 @@ contract ClearFundEscrow is Ownable, ReentrancyGuard {
     ) external {
         Campaign storage campaign = campaigns[campaignId];
         _requireValidCampaign(campaign);
+        if (!campaign.active) revert CampaignInactive();
         if (campaign.organizer != msg.sender) revert NotOrganizer();
 
         Milestone storage m = _getMilestone(campaign, campaignId, milestoneIndex);
@@ -408,6 +409,7 @@ contract ClearFundEscrow is Ownable, ReentrancyGuard {
     function markMilestoneComplete(uint256 campaignId, uint256 milestoneIndex) external {
         Campaign storage campaign = campaigns[campaignId];
         _requireValidCampaign(campaign);
+        if (!campaign.active) revert CampaignInactive();
         if (campaign.organizer != msg.sender) revert NotOrganizer();
 
         Milestone storage m = _getMilestone(campaign, campaignId, milestoneIndex);
@@ -432,6 +434,7 @@ contract ClearFundEscrow is Ownable, ReentrancyGuard {
 
         Campaign storage campaign = campaigns[campaignId];
         _requireValidCampaign(campaign);
+        if (!campaign.active) revert CampaignInactive();
 
         Milestone storage m = _getMilestone(campaign, campaignId, milestoneIndex);
         if (m.status != MilestoneStatus.Completed) {
@@ -460,6 +463,7 @@ contract ClearFundEscrow is Ownable, ReentrancyGuard {
 
         Campaign storage campaign = campaigns[campaignId];
         _requireValidCampaign(campaign);
+        if (!campaign.active) revert CampaignInactive();
 
         Milestone storage m = _getMilestone(campaign, campaignId, milestoneIndex);
         if (m.status != MilestoneStatus.Approved) {
