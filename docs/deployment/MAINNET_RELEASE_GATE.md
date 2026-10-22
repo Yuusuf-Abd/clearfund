@@ -8,7 +8,7 @@
 - [x] Frontend Vitest tests (44 passed on commit 8ffc79b)
 - [x] Foundry Solidity tests and invariant suite passed on commit `ca920d3` (GitHub Actions run `39850722862`)
 - [x] Mainnet-configured frontend production build
-- [x] GitHub Actions run `39851159116` on commit `8a61370`: frontend and contracts jobs both passed, including reviewer-rotation regression tests
+- [x] GitHub Actions run `39851779399` on commit `d324a6b`: frontend and contracts jobs both passed
 
 ## Evidence required before promoting to production
 
@@ -29,6 +29,8 @@
 **Governance concentration:** `reviewer` is one globally authorized address and the `owner` can replace it. The threat model is documented in [REVIEWER_GOVERNANCE.md](./REVIEWER_GOVERNANCE.md). Key custody, outstanding approvals during rotation, and incident response still require independent review before production.
 
 **Mutable evidence (mitigation CI-verified):** `submitEvidence` now rejects edits in Approved and Paid states. Edits are permitted after reviewer revocation (Completed state), with a regression test that requires a fresh approval to relock the evidence.
+
+**Evidence requirement is not enforced onchain:** `approveMilestone` checks Completed status and reviewer identity but does not check whether `evidenceURI` is nonempty or whether linked evidence is authentic. Reviewer policy must explicitly reject missing evidence; consider adding a contract-level nonempty-evidence requirement and regression tests before release. Do not describe evidence submission as mandatory at the contract layer until implemented.
 
 **Deployment constructor:** `ClearFundEscrow(address usdcTokenAddress, address initialReviewer)` sets `owner` to the deploying address. Validate token address, reviewer identity, owner governance and deployed bytecode before calling a contract production-ready. No Mainnet deployment has been verified.
 
