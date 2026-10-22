@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { FileSearch, CheckCircle2, Search, ExternalLink, Copy, Check, Info } from 'lucide-react';
+import { FileSearch, Search, ExternalLink, Copy, Check, Info } from 'lucide-react';
 import { formatUSDC, shortTxRef } from '../data/sampleData';
 import { CampaignsStore } from '../hooks/useCampaigns';
 import Badge from '../components/Badge';
@@ -61,7 +61,7 @@ export default function TxExplorer({ onNavigate, store }: TxExplorerProps) {
         from: cn.contributor,
         timestamp: cn.timestamp,
         note: cn.note,
-        // Only mark verified when the tx hash is a genuine onchain record
+        // A transaction hash is only a reference; receipt verification is separate
         verified: false,
         source: contributionSource,
       });
@@ -75,7 +75,7 @@ export default function TxExplorer({ onNavigate, store }: TxExplorerProps) {
           type: 'release',
           amount: m.releasedAmount,
           timestamp: m.completedAt ?? m.dueDate,
-          verified: m.status === 'verified',
+          verified: false,
           milestoneTitle: m.title,
           source: detectSource(m.txRef, c.isDemo),
         });
@@ -310,7 +310,7 @@ export default function TxExplorer({ onNavigate, store }: TxExplorerProps) {
                       <td className="px-4 py-3">
                         {tx.source === 'onchain' ? (
                           <div className="flex items-center gap-1 text-xs" style={{ color: 'var(--success)' }}>
-                            <CheckCircle2 size={12} /> Unverified Reference
+                            <Info size={12} /> Unverified Reference
                           </div>
                         ) : tx.source === 'demo' ? (
                           <div className="text-xs" style={{ color: 'var(--subtle)' }}>DEMO</div>
