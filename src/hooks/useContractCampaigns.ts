@@ -46,7 +46,7 @@ export interface IndexerState {
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-const LS_LAST_BLOCK_KEY = 'clearfund_indexer_last_block'
+const LS_LAST_BLOCK_KEY = `clearfund_indexer_last_block_${CLEARFUND_CHAIN.id}_${ESCROW_ADDRESS.toLowerCase()}`
 const BATCH_SIZE = 2_000n
 const LOOKBACK = 50_000n   // default lookback when deploy block is unknown
 
@@ -92,9 +92,9 @@ export function useContractCampaigns(): IndexerState {
     abortRef.current = false
     setState((s) => ({ ...s, isLoading: true, error: undefined }))
 
-    // Build a public client for Arc Testnet using the proxy env vars when available.
+    // Build a public client for the configured Arc network using the proxy when available.
     const proxyChains: string[] = String(import.meta.env.VITE_RPC_PROXY_CHAINS ?? '').split(',')
-    const compassKey = 'Arc_Testnet'
+    const compassKey = CLEARFUND_CHAIN.id === 5042 ? 'Arc_Mainnet' : 'Arc_Testnet'
     const rpcUrl =
       import.meta.env.VITE_RPC_PROXY_BASE_URL && proxyChains.some((c) => c === compassKey)
         ? `${import.meta.env.VITE_RPC_PROXY_BASE_URL}/api/rpc/${compassKey}?_rpc_token=${import.meta.env.VITE_RPC_PROXY_TOKEN}`
