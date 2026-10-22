@@ -293,8 +293,8 @@ contract ClearFundEscrow is Ownable, ReentrancyGuard {
         Campaign storage campaign = campaigns[campaignId];
         _requireValidCampaign(campaign);
         if (campaign.organizer != msg.sender) revert NotOrganizer();
-        // Allow on inactive campaigns that still hold a balance (blocklist remediation).
-        if (!campaign.active && campaignBalance[campaignId] == 0) revert CampaignInactive();
+        // Cancelled campaigns are refund-only; recipient changes have no payout purpose.
+        if (!campaign.active) revert CampaignInactive();
         if (newRecipient == address(0)) revert ZeroAddress();
 
         // Block if any milestone is awaiting payout (Approved but not yet Paid).
