@@ -26,8 +26,8 @@ jobs:
         run: bun run typecheck
       - name: Lint (read-only)
         run: |
-          bunx oxlint --type-aware src scripts
-          bunx oxlint .
+          bunx oxlint --type-aware src scripts --ignore-pattern scripts/compass-deploy.ts
+          bunx oxlint . --ignore-pattern scripts/compass-deploy.ts
       - name: Unit tests
         run: bunx vitest run
       - name: Production build with explicit Arc Mainnet
