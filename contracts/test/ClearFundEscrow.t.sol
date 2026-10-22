@@ -804,6 +804,28 @@ contract ClearFundEscrowTest is Test {
     }
 
     // Only the owner may rotate reviewers; failed attempts leave authority unchanged.
+    function test_SetReviewer_ExistingApprovalCanBeRevokedByReplacement() public {
+        uint256 id = _setupContributedCampaign();
+        _advanceToApproved(id, 0);
+
+        address replacement = makeAddr("replacementForExistingApproval");
+        vm.prank(owner);
+        escrow.setReviewer(replacement);
+
+        // Rotation does not automatically revoke a previously approved milestone.
+        (, , ClearFundEscrow.MilestoneStatus beforeStatus, ,) = escrow.milestones(id, 0);
+        assertEq(uint256(beforeStatus), uint256(ClearFundEscrow.MilestoneStatus.Approved));
+
+        vm.prank(reviewer);
+        vm.expectRevert(ClearFundEscrow.NotReviewer.selector);
+        escrow.revokeApproval(id, 0);
+
+        vm.prank(replacement);
+        escrow.revokeApproval(id, 0);
+        (, , ClearFundEscrow.MilestoneStatus afterStatus, ,) = escrow.milestones(id, 0);
+        assertEq(uint256(afterStatus), uint256(ClearFundEscrow.MilestoneStatus.Completed));
+    }
+
     function test_SetReviewer_NonOwnerCannotRotateAuthority() public {
         address originalReviewer = escrow.reviewer();
         vm.prank(organizer);
