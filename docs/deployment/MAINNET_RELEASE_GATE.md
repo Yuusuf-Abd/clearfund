@@ -8,7 +8,7 @@
 - [x] Frontend Vitest tests (44 passed on commit 8ffc79b)
 - [x] Foundry Solidity tests and invariant suite passed on commit `ca920d3` (GitHub Actions run `39850722862`)
 - [x] Mainnet-configured frontend production build
-- [x] GitHub Actions run `39851779399` on commit `d324a6b`: frontend and contracts jobs both passed
+- [x] GitHub Actions run `39852347307` on commit `892b516`: frontend and contracts jobs both passed, including the evidence-required approval regression
 
 ## Evidence required before promoting to production
 
@@ -30,7 +30,7 @@
 
 **Mutable evidence (mitigation CI-verified):** `submitEvidence` now rejects edits in Approved and Paid states. Edits are permitted after reviewer revocation (Completed state), with a regression test that requires a fresh approval to relock the evidence.
 
-**Evidence requirement is not enforced onchain:** `approveMilestone` checks Completed status and reviewer identity but does not check whether `evidenceURI` is nonempty or whether linked evidence is authentic. Reviewer policy must explicitly reject missing evidence; consider adding a contract-level nonempty-evidence requirement and regression tests before release. Do not describe evidence submission as mandatory at the contract layer until implemented.
+**Evidence presence requirement (CI-verified):** `approveMilestone` now rejects a milestone with an empty `evidenceURI` using `MissingMilestoneEvidence`, and the approval regression passes in GitHub Actions run `39852347307`. This validates only nonempty text; the contract cannot establish that a URI resolves to authentic, relevant or immutable evidence. Reviewer verification and evidence hosting integrity remain release considerations.
 
 **Deployment constructor:** `ClearFundEscrow(address usdcTokenAddress, address initialReviewer)` sets `owner` to the deploying address. Validate token address, reviewer identity, owner governance and deployed bytecode before calling a contract production-ready. No Mainnet deployment has been verified.
 
