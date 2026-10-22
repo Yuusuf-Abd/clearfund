@@ -1007,18 +1007,19 @@ contract ClearFundEscrowTest is Test {
         escrow.cancelCampaign(id);
     }
 
-    // Cancel is allowed after the Approved milestone is first released.
-    function test_CancelCampaign_AllowedAfterReleaseOfApprovedMilestone() public {
+    // Cancellation after any payout must fail to protect full refund solvency.
+    function test_CancelCampaign_RevertsAfterReleaseOfApprovedMilestone() public {
         uint256 id = _setupContributedCampaign();
         _advanceToApproved(id, 0);
 
-        // Release the approved milestone first
         vm.prank(organizer); escrow.releaseMilestone(id, 0);
 
-        // Now cancel must succeed
-        vm.prank(organizer); escrow.cancelCampaign(id);
+        vm.prank(organizer);
+        vm.expectRevert(ClearFundEscrow.PayoutAlreadyMadeBlocksCancel.selector);
+        escrow.cancelCampaign(id);
+
         (, , , , , , bool active, ,) = escrow.campaigns(id);
-        assertFalse(active);
+        assertTrue(active);
     }
 
     // Cancel is allowed after the reviewer revokes the approval.
