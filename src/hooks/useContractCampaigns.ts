@@ -20,6 +20,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { createPublicClient, http, parseAbiItem } from 'viem'
 import { CLEARFUND_CHAIN, ESCROW_ADDRESS, CLEARFUND_ESCROW_ABI, isContractDeployed } from '../lib/clearfundContract'
 import { getIndexerBatchEnd } from '../lib/indexerBatch'
+import { getIndexerResumeState } from '../lib/indexerResume'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -128,19 +129,10 @@ export function useContractCampaigns(): IndexerState {
       const cachedIds = loadCampaignIds()
       // Old cursor-only caches cannot reconstruct previous campaigns; rescan once.
       const lastScanned = loadLastBlock()
-      // If the RPC head moves backwards (e.g. a reorg or endpoint switch),
-      // cached IDs and the cursor may refer to blocks no longer on this chain.
-      // Rebuild from the configured deployment block instead of skipping logs.
-      const cacheAheadOfHead = lastScanned !== undefined && lastScanned > head
-      const resumeBlock = !cacheAheadOfHead && cachedIds.length && lastScanned !== undefined
-        ? lastScanned + 1n
-        : deployBlock
-
-      // Start from the later of resume block and deploy block.
-      let fromBlock = resumeBlock > deployBlock ? resumeBlock : deployBlock
-
-      // Collect new campaign IDs from events; discard stale IDs on rollback.
-      const newIds = new Set<bigint>(cacheAheadOfHead ? [] : cachedIds)
+      // Discard cached IDs if the chain head rolled behind the saved cursor.
+      const resume = getIndexerResumeState(deployBlock, head, lastScanned, cachedIds)
+      let fromBlock = resume.fromBlock
+      const newIds = resume.ids
 
       while (fromBlock <= head) {
         if (abortRef.current) return
