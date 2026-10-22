@@ -22,6 +22,16 @@
 - [ ] Conduct a security review of reviewer permissions, milestone approval, payout, cancellation, and refund paths
 - [ ] Obtain explicit authorization from an eligible account owner before any real-money deployment or transaction
 
+## Contract security review — release blockers
+
+**Refund solvency after partial payouts (high priority):** `claimRefund` retains each contributor's original full `contributions[campaignId][address]` entitlement, while `releaseMilestone` reduces the shared `campaignBalance[campaignId]`. If an organizer releases some funds and subsequently cancels the campaign, total refund claims can exceed the remaining campaign balance. Early refund claimants may receive full amounts while later claimants revert with `InsufficientRefundBalance`. The code comments acknowledge this limitation, but a passing test suite does not make this a fair or solvent refund design. **Do not release for custody of real funds until a revised, explicitly defined refund policy and adversarial tests are reviewed.** Possible policy choices include prohibiting cancellation after any payout or designing proportional post-payout refunds; each has product trade-offs and needs independent review.
+
+**Governance concentration:** `reviewer` is one globally authorized address and the `owner` can replace it. Require a documented reviewer/owner governance policy and threat model before any production use.
+
+**Mutable evidence:** `submitEvidence` currently has no milestone-status restriction, so the organizer can replace `evidenceURI` even after approval or payment. Decide whether evidence must be immutable at approval, then implement and test the chosen policy.
+
+**Deployment constructor:** `ClearFundEscrow(address usdcTokenAddress, address initialReviewer)` sets `owner` to the deploying address. Validate token address, reviewer identity, owner governance and deployed bytecode before calling a contract production-ready. No Mainnet deployment has been verified.
+
 ## Known evidence gaps
 
 - The historical address `0x3cfce9ad713a72ecd0a9f1199664fea8b4de209e` is a **Testnet** address, not Mainnet deployment evidence.
