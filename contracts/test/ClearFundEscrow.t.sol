@@ -116,6 +116,7 @@ contract ClearFundEscrowTest is Test {
 
     /// Advances a milestone all the way to Approved.
     function _advanceToApproved(uint256 id, uint256 mIdx) internal {
+        vm.prank(organizer); escrow.submitEvidence(id, mIdx, "ipfs://verified-evidence");
         vm.prank(organizer); escrow.markMilestoneComplete(id, mIdx);
         vm.prank(reviewer);  escrow.approveMilestone(id, mIdx);
     }
@@ -375,9 +376,25 @@ contract ClearFundEscrowTest is Test {
     // 7. approveMilestone
     // ════════════════════════════════════════════════════════════════════════
 
+    function test_ApproveMilestone_RevertsWithoutEvidence() public {
+        uint256 id = _createCampaign();
+        vm.prank(organizer); escrow.addMilestone(id, "m0", MILESTONE_A);
+        vm.prank(organizer); escrow.markMilestoneComplete(id, 0);
+
+        vm.prank(reviewer);
+        vm.expectRevert(ClearFundEscrow.MissingMilestoneEvidence.selector);
+        escrow.approveMilestone(id, 0);
+
+        vm.prank(organizer); escrow.submitEvidence(id, 0, "ipfs://verified-evidence");
+        vm.prank(reviewer); escrow.approveMilestone(id, 0);
+        (, , ClearFundEscrow.MilestoneStatus status, ,) = escrow.milestones(id, 0);
+        assertEq(uint256(status), uint256(ClearFundEscrow.MilestoneStatus.Approved));
+    }
+
     function test_ApproveMilestone_SetsStatus() public {
         uint256 id = _createCampaign();
         vm.prank(organizer); escrow.addMilestone(id, "m0", MILESTONE_A);
+        vm.prank(organizer); escrow.submitEvidence(id, 0, "ipfs://verified-evidence");
         vm.prank(organizer); escrow.markMilestoneComplete(id, 0);
         vm.prank(reviewer);  escrow.approveMilestone(id, 0);
 
@@ -436,6 +453,7 @@ contract ClearFundEscrowTest is Test {
     function test_ApproveMilestone_EmitsMilestoneApproved() public {
         uint256 id = _createCampaign();
         vm.prank(organizer); escrow.addMilestone(id, "m0", MILESTONE_A);
+        vm.prank(organizer); escrow.submitEvidence(id, 0, "ipfs://verified-evidence");
         vm.prank(organizer); escrow.markMilestoneComplete(id, 0);
 
         vm.prank(reviewer);
@@ -541,6 +559,7 @@ contract ClearFundEscrowTest is Test {
         uint256 id = _createCampaign();
         vm.prank(organizer); escrow.addMilestone(id, "m0", MILESTONE_A);
         // No contributions
+        vm.prank(organizer); escrow.submitEvidence(id, 0, "ipfs://verified-evidence");
         vm.prank(organizer); escrow.markMilestoneComplete(id, 0);
         vm.prank(reviewer);  escrow.approveMilestone(id, 0);
 
@@ -787,6 +806,8 @@ contract ClearFundEscrowTest is Test {
     function test_SetReviewer_RotationRevokesOldReviewer() public {
         uint256 id = _setupContributedCampaign();
         vm.prank(organizer);
+        escrow.submitEvidence(id, 0, "ipfs://verified-evidence");
+        vm.prank(organizer);
         escrow.markMilestoneComplete(id, 0);
 
         address replacement = makeAddr("replacementReviewer");
@@ -1007,6 +1028,7 @@ contract ClearFundEscrowTest is Test {
         vm.prank(organizer2); escrow.addMilestone(idB, "mB", MILESTONE_A);
         vm.prank(bob); escrow.contribute(idB, CONTRIB);
 
+        vm.prank(organizer2); escrow.submitEvidence(idB, 0, "ipfs://verified-evidence");
         vm.prank(organizer2); escrow.markMilestoneComplete(idB, 0);
         vm.prank(reviewer);   escrow.approveMilestone(idB, 0);
         vm.prank(organizer2); escrow.releaseMilestone(idB, 0);
@@ -1250,6 +1272,7 @@ contract ClearFundEscrowTest is Test {
     function test_Phase3_ApproveMilestone_AuthorizedReviewerOnly() public {
         uint256 id = _createCampaign();
         vm.prank(organizer); escrow.addMilestone(id, "m0", MILESTONE_A);
+        vm.prank(organizer); escrow.submitEvidence(id, 0, "ipfs://verified-evidence");
         vm.prank(organizer); escrow.markMilestoneComplete(id, 0);
 
         // Non-reviewer attempt must revert.
