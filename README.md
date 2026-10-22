@@ -168,7 +168,7 @@ bun run check
 2. Push the repository. The `start` script (`vite preview --port 7860 --host`) runs the production build on the port HF expects.
 3. Set `VITE_CLEARFUND_ESCROW_ADDRESS` in Space Secrets for testnet mode.
 
-> **Note:** All deployments start in **DEMO mode** by default when `VITE_CLEARFUND_ESCROW_ADDRESS` is not set. No wallet is required to browse the demo.
+> **Note:** An unset escrow address enables sample-data DEMO behavior, but production builds still require explicit `VITE_CLEARFUND_CHAIN=mainnet`. DEMO mode does not prove a deployed escrow.
 
 ---
 
@@ -185,33 +185,15 @@ forge test -vvv
 forge test --gas-report
 ```
 
-All 84 tests should pass (82 unit + 2 invariant tests).
+Test counts evolve as regression coverage grows. Check the latest GitHub Actions run for verified results.
 
 ---
 
-## Deploying the Contract
+## Contract Deployment Status
 
-The Arc Studio platform deployer has hit its daily native gas limit. Use your own wallet:
+No Arc Mainnet escrow has been independently verified for this release. The historical Testnet address is not proof of a Mainnet deployment. This repository supports contract compilation, Foundry tests, and a local demonstration without custody of real funds.
 
-```bash
-# Set up environment
-export RPC_URL=https://rpc.testnet.arc.io    # Arc Testnet RPC
-export PRIVATE_KEY=0x...                      # Your deployer private key
-export USDC=0x3600000000000000000000000000000000000000  # Arc Testnet USDC
-export REVIEWER=0x...                         # Your reviewer address
-
-# Deploy
-forge create contracts/ClearFundEscrow.sol:ClearFundEscrow \
-  --rpc-url $RPC_URL \
-  --private-key $PRIVATE_KEY \
-  --constructor-args $USDC $REVIEWER
-
-# Note the deployed address and the deployment block number, then:
-# Edit .env:
-# VITE_CLEARFUND_ESCROW_ADDRESS=0x<deployed-address>
-# VITE_CLEARFUND_DEPLOY_BLOCK=<block-number>
-# Restart the dev server: bun run dev
-```
+Before any future production use, consult [the Mainnet release gate](docs/deployment/MAINNET_RELEASE_GATE.md), obtain an independent security review, and have an eligible authorized operator verify the intended network, deployed bytecode, constructor parameters, reviewer governance, and release policy. Do not paste private keys into documentation, source files, or support chats.
 
 ---
 
@@ -220,8 +202,8 @@ forge create contracts/ClearFundEscrow.sol:ClearFundEscrow \
 | Mode | How to activate | What happens |
 |---|---|---|
 | **DEMO** | Default (no env vars set) | All data in localStorage. No wallet needed. Sample campaigns shown. |
-| **Arc Testnet** | Set `VITE_CLEARFUND_ESCROW_ADDRESS` | Wallet connect enabled. Real contract calls on Arc Testnet. Test USDC only. |
-| **Arc Mainnet** | Deploy contract + set `VITE_CLEARFUND_ESCROW_ADDRESS` (mainnet chain ID 5042) | Live USDC escrow — requires independently audited contract and wallet funded with USDC for gas. |
+| **Arc Testnet** | Explicit `VITE_CLEARFUND_CHAIN=testnet` and a verified Testnet escrow address in a development build | Testnet-only wallet and contract interactions. |
+| **Arc Mainnet** | Release gate not satisfied | Not currently verified for live escrow or real-funds use. |
 
 ---
 
