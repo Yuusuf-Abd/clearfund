@@ -2,7 +2,7 @@
 
 **Fund with clarity. Release with accountability.**
 
-ClearFund is a milestone-based USDC funding protocol built on Arc — Circle's purpose-built Layer-1 blockchain where USDC is the native gas token. Contributors lock funds that are released after an authorized reviewer approves a completed milestone and the organizer initiates payout. Evidence URIs can be submitted, but the current contract does not enforce nonempty evidence before approval.
+ClearFund is a milestone-based USDC funding protocol built on Arc — Circle's purpose-built Layer-1 blockchain where USDC is the native gas token. Contributors lock funds that are released after an authorized reviewer approves a completed milestone and the organizer initiates payout. The contract requires a nonempty evidence URI before approval, but does not independently verify its authenticity.
 
 ---
 
@@ -13,7 +13,7 @@ Traditional crowdfunding and grant systems release funds upfront with no mechani
 ## ClearFund's Solution
 
 - **Milestone-locked escrow:** USDC is held in a smart contract and released only per milestone, never in a lump sum.
-- **Evidence review workflow:** Organizers can attach proof links or documents for reviewer inspection. The current contract does not enforce nonempty evidence or verify linked content; this is an outstanding release risk.
+- **Evidence review workflow:** Organizers attach an evidence URI before reviewer approval. The contract enforces a nonempty URI, not whether the linked proof is authentic or sufficient; reviewers must verify that independently.
 - **Independent reviewer:** A dedicated reviewer address (ideally a multi-sig) approves or revokes milestone approvals. The frontend role check is a UX hint only — the contract enforces access.
 - **Pull-pattern refunds:** If a campaign is cancelled before any payout, contributors can claim their full recorded contribution themselves. Cancellation is blocked after any milestone payout; the contract never sweeps funds to the owner.
 - **Full transparency:** Every contribution, milestone approval, and fund release is recorded onchain with a transaction reference linkable to the Arc block explorer.
