@@ -22,6 +22,7 @@ import { CLEARFUND_CHAIN, ESCROW_ADDRESS, CLEARFUND_ESCROW_ABI, isContractDeploy
 import { getIndexerBatchEnd } from '../lib/indexerBatch'
 import { getIndexerResumeState } from '../lib/indexerResume'
 import { withRpcRetry } from '../lib/indexerRpcRetry'
+import { shouldRebuildIndexer } from '../lib/indexerReorg'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -52,6 +53,7 @@ export interface IndexerState {
 const INDEXER_SCOPE = `${CLEARFUND_CHAIN.id}_${ESCROW_ADDRESS.toLowerCase()}`
 const LS_LAST_BLOCK_KEY = `clearfund_indexer_last_block_${INDEXER_SCOPE}`
 const LS_CAMPAIGN_IDS_KEY = `clearfund_indexer_campaign_ids_${INDEXER_SCOPE}`
+const LS_BLOCK_HASH_KEY = `clearfund_indexer_block_hash_${INDEXER_SCOPE}`
 const BATCH_SIZE = 2_000n
 const LOOKBACK = 50_000n   // default lookback when deploy block is unknown
 
@@ -131,7 +133,15 @@ export function useContractCampaigns(): IndexerState {
       // Old cursor-only caches cannot reconstruct previous campaigns; rescan once.
       const lastScanned = loadLastBlock()
       // Discard cached IDs if the chain head rolled behind the saved cursor.
-      const resume = getIndexerResumeState(deployBlock, head, lastScanned, cachedIds)
+      // Validate the previously scanned block against the current canonical chain.
+      // A changed hash detects a shallow reorg even when the chain head increases.
+      const savedHash = localStorage.getItem(LS_BLOCK_HASH_KEY) ?? undefined
+      const observedHash = lastScanned !== undefined && lastScanned <= head
+        ? (await withRpcRetry(() => client.getBlock({ blockNumber: lastScanned }))).hash
+        : undefined
+      if (abortRef.current) return
+      const rebuild = shouldRebuildIndexer(lastScanned, head, savedHash, observedHash)
+      const resume = getIndexerResumeState(deployBlock, head, rebuild ? undefined : lastScanned, rebuild ? [] : cachedIds)
       let fromBlock = resume.fromBlock
       const newIds = resume.ids
 
@@ -173,12 +183,12 @@ export function useContractCampaigns(): IndexerState {
               functionName: 'campaigns',
               args: [id],
             })),
-            client.readContract({
+            withRpcRetry(() => client.readContract({
               address: ESCROW_ADDRESS as `0x${string}`,
               abi: CLEARFUND_ESCROW_ABI,
               functionName: 'campaignBalance',
               args: [id],
-            }),
+            })),
           ])
           if (abortRef.current) return
           const [organizer, recipient, target, metadataURI, totalContributed, totalPaidOut, active, milestoneCount, totalAllocated] = rawCampaign as [
@@ -201,6 +211,11 @@ export function useContractCampaigns(): IndexerState {
 
       // Commit the cache only after the event scan AND campaign reads succeed.
       // Never advance a cursor for a failed or abandoned refresh.
+      const checkpointHash = (await withRpcRetry(() => client.getBlock({ blockNumber: head }))).hash
+      if (abortRef.current) return
+      // Store the hash before the cursor: interrupted writes trigger a safe
+      // rebuild on the next refresh rather than trusting an unverified cursor.
+      try { localStorage.setItem(LS_BLOCK_HASH_KEY, checkpointHash) } catch { /* ignore */ }
       saveCampaignIds(newIds)
       saveLastBlock(head)
 
