@@ -387,6 +387,8 @@ export const CLEARFUND_ESCROW_ABI = [
   { type: 'error', name: 'MilestoneAllocationExceeded', inputs: [] },
   { type: 'error', name: 'TooManyMilestones',           inputs: [] },
   { type: 'error', name: 'ApprovedMilestoneBlocksCancel', inputs: [] },
+  { type: 'error', name: 'PayoutAlreadyMadeBlocksCancel', inputs: [] },
+  { type: 'error', name: 'EvidenceLockedAfterApproval', inputs: [] },
   { type: 'error', name: 'InvalidMilestoneIndex',     inputs: [] },
   {
     type: 'error',
