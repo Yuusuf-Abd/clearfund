@@ -46,7 +46,9 @@ export interface IndexerState {
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-const LS_LAST_BLOCK_KEY = `clearfund_indexer_last_block_${CLEARFUND_CHAIN.id}_${ESCROW_ADDRESS.toLowerCase()}`
+const INDEXER_SCOPE = `${CLEARFUND_CHAIN.id}_${ESCROW_ADDRESS.toLowerCase()}`
+const LS_LAST_BLOCK_KEY = `clearfund_indexer_last_block_${INDEXER_SCOPE}`
+const LS_CAMPAIGN_IDS_KEY = `clearfund_indexer_campaign_ids_${INDEXER_SCOPE}`
 const BATCH_SIZE = 2_000n
 const LOOKBACK = 50_000n   // default lookback when deploy block is unknown
 
@@ -68,6 +70,20 @@ function loadLastBlock(): bigint | undefined {
 
 function saveLastBlock(block: bigint) {
   try { localStorage.setItem(LS_LAST_BLOCK_KEY, String(block)) } catch { /* ignore */ }
+}
+
+function loadCampaignIds(): bigint[] {
+  try {
+    const stored = localStorage.getItem(LS_CAMPAIGN_IDS_KEY)
+    if (!stored) return []
+    const parsed: unknown = JSON.parse(stored)
+    if (!Array.isArray(parsed)) return []
+    return parsed.filter((id): id is string => typeof id === 'string' && /^\d+$/.test(id)).map((id) => BigInt(id))
+  } catch { return [] }
+}
+
+function saveCampaignIds(ids: Set<bigint>) {
+  try { localStorage.setItem(LS_CAMPAIGN_IDS_KEY, JSON.stringify([...ids].map(String))) } catch { /* ignore */ }
 }
 
 const CAMPAIGN_CREATED_EVENT = parseAbiItem(
@@ -106,13 +122,15 @@ export function useContractCampaigns(): IndexerState {
       // 1. Get chain head — never crawl from 0
       const head = await client.getBlockNumber()
       const deployBlock = getDeployBlock(head)
-      const resumeBlock = loadLastBlock() ?? deployBlock
+      const cachedIds = loadCampaignIds()
+      // Old cursor-only caches cannot reconstruct previous campaigns; rescan once.
+      const resumeBlock = cachedIds.length ? (loadLastBlock() ?? deployBlock) + 1n : deployBlock
 
       // start from the later of resume block and deploy block
       let fromBlock = resumeBlock > deployBlock ? resumeBlock : deployBlock
 
       // Collect new campaign IDs from events
-      const newIds = new Set<bigint>()
+      const newIds = new Set<bigint>(cachedIds)
 
       while (fromBlock <= head) {
         if (abortRef.current) return
@@ -133,6 +151,8 @@ export function useContractCampaigns(): IndexerState {
         fromBlock = toBlock + 1n
       }
 
+      // Persist IDs before advancing the cursor so refreshes never lose campaigns.
+      saveCampaignIds(newIds)
       saveLastBlock(head)
 
       if (abortRef.current) return
