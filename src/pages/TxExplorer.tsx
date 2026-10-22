@@ -15,7 +15,7 @@ interface TxExplorerProps {
   store: CampaignsStore;
 }
 
-/** Source label distinguishes DEMO sample data from local drafts and real testnet hashes */
+/** Source describes recorded references, not verified blockchain receipts. */
 type TxSource = 'demo' | 'local' | 'onchain'
 
 interface TxRow {
@@ -27,7 +27,6 @@ interface TxRow {
   from?: string;
   timestamp: string;
   note?: string;
-  verified: boolean;
   milestoneTitle?: string;
   source: TxSource;
 }
@@ -40,10 +39,10 @@ export default function TxExplorer({ onNavigate, store }: TxExplorerProps) {
   const [sourceFilter, setSourceFilter] = useState<'all' | TxSource>('all');
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
-  /** Real Arc tx hashes start with 0x and are 66 chars. Anything else is DEMO data. */
+  /** A syntactically valid hash is only an unverified reference. */
   function detectSource(txRef: string, isDemo: boolean | undefined): TxSource {
     if (isDemo) return 'demo'
-    if (txRef.startsWith('0x') && txRef.length === 66) return mode === 'demo' ? 'local' : 'onchain'
+    if (/^0x[0-9a-fA-F]{64}$/.test(txRef)) return mode === 'demo' ? 'local' : 'onchain'
     return 'local'
   }
 
@@ -61,8 +60,6 @@ export default function TxExplorer({ onNavigate, store }: TxExplorerProps) {
         from: cn.contributor,
         timestamp: cn.timestamp,
         note: cn.note,
-        // A transaction hash is only a reference; receipt verification is separate
-        verified: false,
         source: contributionSource,
       });
     }
@@ -75,7 +72,6 @@ export default function TxExplorer({ onNavigate, store }: TxExplorerProps) {
           type: 'release',
           amount: m.releasedAmount,
           timestamp: m.completedAt ?? m.dueDate,
-          verified: false,
           milestoneTitle: m.title,
           source: detectSource(m.txRef, c.isDemo),
         });
@@ -124,15 +120,15 @@ export default function TxExplorer({ onNavigate, store }: TxExplorerProps) {
           <DemoBadge />
         </div>
         <p className="text-sm mb-8" style={{ color: 'var(--subtle)' }}>
-          All USDC contributions and milestone fund releases — linked to Arc transaction references.
+          Recorded contributions and milestone releases, including sample data and unverified transaction references.
         </p>
 
         {/* Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
           {[
-            { label: 'Total Volume', value: formatUSDC(totalVolume) },
-            { label: 'Contributions', value: String(unique.filter((t) => t.type === 'contribution').length) },
-            { label: 'Releases', value: String(unique.filter((t) => t.type === 'release').length) },
+            { label: 'Recorded Volume (Unverified)', value: formatUSDC(totalVolume) },
+            { label: 'Recorded Contributions', value: String(unique.filter((t) => t.type === 'contribution').length) },
+            { label: 'Recorded Releases', value: String(unique.filter((t) => t.type === 'release').length) },
           ].map(({ label, value }) => (
             <div key={label} className="glass rounded-2xl p-4 text-center">
               <div className="display font-semibold text-xl tabular-nums" style={{ color: 'var(--ink)' }}>
@@ -188,7 +184,7 @@ export default function TxExplorer({ onNavigate, store }: TxExplorerProps) {
                 minHeight: 32,
               }}
             >
-              {s === 'onchain' ? (mode === 'mainnet' ? 'Arc Mainnet' : 'Arc Testnet') : s.charAt(0).toUpperCase() + s.slice(1)}
+              {s === 'onchain' ? (mode === 'mainnet' ? 'Mainnet hash refs' : 'Testnet hash refs') : s.charAt(0).toUpperCase() + s.slice(1)}
             </button>
           ))}
         </div>
@@ -302,14 +298,14 @@ export default function TxExplorer({ onNavigate, store }: TxExplorerProps) {
                         {tx.source === 'onchain' && (
                           <span className="inline-flex px-1.5 py-0.5 rounded-full text-xs font-semibold"
                             style={{ background: 'rgba(77,157,224,0.15)', color: 'var(--accent)', border: '1px solid rgba(77,157,224,0.3)' }}>
-                            ONCHAIN REF
+                            TX HASH REF
                           </span>
                         )}
                       </td>
                       {/* Status */}
                       <td className="px-4 py-3">
                         {tx.source === 'onchain' ? (
-                          <div className="flex items-center gap-1 text-xs" style={{ color: 'var(--success)' }}>
+                          <div className="flex items-center gap-1 text-xs" style={{ color: 'var(--muted)' }}>
                             <Info size={12} /> Unverified Reference
                           </div>
                         ) : tx.source === 'demo' ? (
