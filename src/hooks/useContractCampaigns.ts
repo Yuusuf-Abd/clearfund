@@ -125,13 +125,19 @@ export function useContractCampaigns(): IndexerState {
       const cachedIds = loadCampaignIds()
       // Old cursor-only caches cannot reconstruct previous campaigns; rescan once.
       const lastScanned = loadLastBlock()
-      const resumeBlock = cachedIds.length && lastScanned !== undefined ? lastScanned + 1n : deployBlock
+      // If the RPC head moves backwards (e.g. a reorg or endpoint switch),
+      // cached IDs and the cursor may refer to blocks no longer on this chain.
+      // Rebuild from the configured deployment block instead of skipping logs.
+      const cacheAheadOfHead = lastScanned !== undefined && lastScanned > head
+      const resumeBlock = !cacheAheadOfHead && cachedIds.length && lastScanned !== undefined
+        ? lastScanned + 1n
+        : deployBlock
 
-      // start from the later of resume block and deploy block
+      // Start from the later of resume block and deploy block.
       let fromBlock = resumeBlock > deployBlock ? resumeBlock : deployBlock
 
-      // Collect new campaign IDs from events
-      const newIds = new Set<bigint>(cachedIds)
+      // Collect new campaign IDs from events; discard stale IDs on rollback.
+      const newIds = new Set<bigint>(cacheAheadOfHead ? [] : cachedIds)
 
       while (fromBlock <= head) {
         if (abortRef.current) return
