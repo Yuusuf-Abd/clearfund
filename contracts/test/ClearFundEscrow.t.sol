@@ -940,16 +940,18 @@ contract ClearFundEscrowTest is Test {
         escrow.updateRecipient(id, makeAddr("x"));
     }
 
-    function test_UpdateRecipient_AllowedInactiveWithBalance() public {
+    function test_UpdateRecipient_RevertsInactiveCampaignWithBalance() public {
         uint256 id = _createCampaign();
         vm.prank(alice); escrow.contribute(id, CONTRIB);
         vm.prank(organizer); escrow.cancelCampaign(id);
 
-        address newRecip = makeAddr("newRecipient");
-        vm.prank(organizer); escrow.updateRecipient(id, newRecip); // must not revert
+        vm.prank(organizer);
+        vm.expectRevert(ClearFundEscrow.CampaignInactive.selector);
+        escrow.updateRecipient(id, makeAddr("newRecipient"));
 
         (, address rec, , , , , , ,) = escrow.campaigns(id);
-        assertEq(rec, newRecip);
+        assertEq(rec, recipient);
+        assertEq(escrow.campaignBalance(id), CONTRIB);
     }
 
     // REGRESSION: updateRecipient blocked while any milestone is Approved
