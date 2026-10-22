@@ -16,7 +16,7 @@ interface TxExplorerProps {
 }
 
 /** Source label distinguishes DEMO sample data from local drafts and real testnet hashes */
-type TxSource = 'demo' | 'local' | 'testnet'
+type TxSource = 'demo' | 'local' | 'onchain'
 
 interface TxRow {
   txRef: string;
@@ -40,10 +40,10 @@ export default function TxExplorer({ onNavigate, store }: TxExplorerProps) {
   const [sourceFilter, setSourceFilter] = useState<'all' | TxSource>('all');
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
-  /** Real Arc Testnet tx hashes start with 0x and are 66 chars. Anything else is DEMO data. */
+  /** Real Arc tx hashes start with 0x and are 66 chars. Anything else is DEMO data. */
   function detectSource(txRef: string, isDemo: boolean | undefined): TxSource {
     if (isDemo) return 'demo'
-    if (txRef.startsWith('0x') && txRef.length === 66) return 'testnet'
+    if (txRef.startsWith('0x') && txRef.length === 66) return mode === 'demo' ? 'local' : 'onchain'
     return 'local'
   }
 
@@ -62,7 +62,7 @@ export default function TxExplorer({ onNavigate, store }: TxExplorerProps) {
         timestamp: cn.timestamp,
         note: cn.note,
         // Only mark verified when the tx hash is a genuine onchain record
-        verified: contributionSource === 'testnet',
+        verified: false,
         source: contributionSource,
       });
     }
@@ -177,7 +177,7 @@ export default function TxExplorer({ onNavigate, store }: TxExplorerProps) {
         {/* Source filter */}
         <div className="flex items-center gap-1 mb-4 flex-wrap">
           <span className="text-xs mr-1" style={{ color: 'var(--subtle)' }}>Source:</span>
-          {(['all', 'demo', 'local', 'testnet'] as const).map((s) => (
+          {(['all', 'demo', 'local', 'onchain'] as const).map((s) => (
             <button
               key={s}
               onClick={() => setSourceFilter(s)}
@@ -188,7 +188,7 @@ export default function TxExplorer({ onNavigate, store }: TxExplorerProps) {
                 minHeight: 32,
               }}
             >
-              {s === 'testnet' ? 'Arc Testnet' : s.charAt(0).toUpperCase() + s.slice(1)}
+              {s === 'onchain' ? (mode === 'mainnet' ? 'Arc Mainnet' : 'Arc Testnet') : s.charAt(0).toUpperCase() + s.slice(1)}
             </button>
           ))}
         </div>
@@ -202,7 +202,7 @@ export default function TxExplorer({ onNavigate, store }: TxExplorerProps) {
           <span>
             <strong style={{ color: 'var(--ink)' }}>DEMO</strong> rows are sample data with fabricated references.{' '}
             <strong style={{ color: 'var(--ink)' }}>LOCAL DRAFT</strong> rows are user-created but not yet confirmed onchain.{' '}
-            <strong style={{ color: 'var(--ink)' }}>Arc Testnet</strong> rows ({mode === 'testnet' ? 'active' : 'none yet'}) have real tx hashes linkable to the block explorer.{' '}
+            <strong style={{ color: 'var(--ink)' }}>Arc</strong> references are linked to the configured explorer when a transaction hash is recorded; a hash alone does not prove confirmation.{' '}
             Simulated references are never displayed as confirmed blockchain transactions.
           </span>
         </div>
@@ -299,18 +299,18 @@ export default function TxExplorer({ onNavigate, store }: TxExplorerProps) {
                             LOCAL
                           </span>
                         )}
-                        {tx.source === 'testnet' && (
+                        {tx.source === 'onchain' && (
                           <span className="inline-flex px-1.5 py-0.5 rounded-full text-xs font-semibold"
                             style={{ background: 'rgba(77,157,224,0.15)', color: 'var(--accent)', border: '1px solid rgba(77,157,224,0.3)' }}>
-                            TESTNET
+                            ONCHAIN REF
                           </span>
                         )}
                       </td>
                       {/* Status */}
                       <td className="px-4 py-3">
-                        {tx.source === 'testnet' && tx.verified ? (
+                        {tx.source === 'onchain' ? (
                           <div className="flex items-center gap-1 text-xs" style={{ color: 'var(--success)' }}>
-                            <CheckCircle2 size={12} /> Verified Onchain
+                            <CheckCircle2 size={12} /> Unverified Reference
                           </div>
                         ) : tx.source === 'demo' ? (
                           <div className="text-xs" style={{ color: 'var(--subtle)' }}>DEMO</div>
@@ -318,15 +318,15 @@ export default function TxExplorer({ onNavigate, store }: TxExplorerProps) {
                           <div className="text-xs" style={{ color: 'var(--subtle)' }}>Local Draft</div>
                         )}
                       </td>
-                      {/* Link — only for real testnet hashes */}
+                      {/* Explorer links are references, not proof of confirmed receipts */}
                       <td className="px-4 py-3">
-                        {tx.source === 'testnet' ? (
+                        {tx.source === 'onchain' ? (
                           <a
                             href={`${CLEARFUND_CHAIN.blockExplorers?.default?.url}/tx/${tx.txRef}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            title="View on Arc Testnet Explorer"
-                            aria-label="View transaction on Arc Testnet Explorer"
+                            title="Look up transaction reference in the configured Arc explorer"
+                            aria-label="Look up transaction reference in the configured Arc explorer"
                           >
                             <ExternalLink size={12} style={{ color: 'var(--accent)' }} />
                           </a>
