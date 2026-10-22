@@ -152,6 +152,8 @@ export function useContractCampaigns(): IndexerState {
           fromBlock,
           toBlock,
         })
+        // The hook may unmount while an RPC request is pending.
+        if (abortRef.current) return
 
         for (const log of logs) {
           if (log.args.campaignId !== undefined) newIds.add(log.args.campaignId)
@@ -185,6 +187,7 @@ export function useContractCampaigns(): IndexerState {
               args: [id],
             }),
           ])
+          if (abortRef.current) return
           const [organizer, recipient, target, metadataURI, totalContributed, totalPaidOut, active, milestoneCount, totalAllocated] = rawCampaign as [
             `0x${string}`, `0x${string}`, bigint, string, bigint, bigint, boolean, bigint, bigint
           ]
@@ -194,6 +197,7 @@ export function useContractCampaigns(): IndexerState {
             balance: rawBalance as bigint,
           })
         } catch (err) {
+          if (abortRef.current) return
           // A temporary RPC failure must not silently turn a real campaign
           // into a missing row while reporting a successful index.
           throw new Error(`Unable to load campaign ${id.toString()}: ${err instanceof Error ? err.message : 'RPC error'}`)
@@ -218,6 +222,7 @@ export function useContractCampaigns(): IndexerState {
         error: undefined,
       })
     } catch (err) {
+      if (abortRef.current) return
       const msg = (err as { message?: string }).message?.slice(0, 200) ?? 'RPC error'
       setState((s) => ({ ...s, isLoading: false, error: msg }))
     }
