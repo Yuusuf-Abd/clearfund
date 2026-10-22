@@ -5,7 +5,7 @@ import { CampaignsStore } from '../hooks/useCampaigns';
 import CampaignCard from '../components/CampaignCard';
 import DemoBadge from '../components/DemoBadge';
 import { useContractCampaigns } from '../hooks/useContractCampaigns';
-import { isContractDeployed } from '../lib/clearfundContract';
+import { isContractDeployed, CLEARFUND_CHAIN } from '../lib/clearfundContract';
 import { formatUsdc } from '@/onchain-money';
 
 type Page = 'landing' | 'dashboard' | 'create' | 'proof' | 'explorer' | 'campaign';
@@ -14,6 +14,8 @@ interface DashboardProps {
   onNavigate: (page: Page, campaignId?: string) => void;
   store: CampaignsStore;
 }
+
+const networkName = CLEARFUND_CHAIN.id === 5042 ? 'Arc Mainnet' : 'Arc Testnet';
 
 export default function Dashboard({ onNavigate, store }: DashboardProps) {
   const { campaigns } = store;
@@ -66,7 +68,7 @@ export default function Dashboard({ onNavigate, store }: DashboardProps) {
               <DemoBadge />
             </div>
             <p className="text-sm" style={{ color: 'var(--subtle)' }}>
-              {campaigns.length} campaign{campaigns.length !== 1 ? 's' : ''} — proof-based USDC funding on Arc Testnet
+              {campaigns.length} campaign{campaigns.length !== 1 ? 's' : ''} — proof-based USDC funding on {networkName}
               {isContractDeployed() && contractIndex.campaigns.length > 0 && (
                 <span style={{ color: 'var(--accent)' }}>
                   {' '}· {contractIndex.campaigns.length} verified onchain
@@ -170,7 +172,7 @@ export default function Dashboard({ onNavigate, store }: DashboardProps) {
             <div className="flex items-center gap-2 mb-3">
               <Wifi size={14} style={{ color: 'var(--accent)' }} />
               <h2 className="display font-semibold text-base" style={{ color: 'var(--ink)' }}>
-                Arc Testnet Campaigns
+                {networkName} Campaigns
               </h2>
               {contractIndex.isLoading && <Loader size={13} className="animate-spin" style={{ color: 'var(--subtle)' }} />}
               {contractIndex.chainHead > 0n && (
@@ -188,7 +190,7 @@ export default function Dashboard({ onNavigate, store }: DashboardProps) {
             {!contractIndex.isLoading && contractIndex.campaigns.length === 0 && !contractIndex.error && (
               <div className="glass rounded-2xl flex flex-col items-center justify-center py-8">
                 <p className="text-sm" style={{ color: 'var(--subtle)' }}>
-                  No campaigns found on Arc Testnet yet.
+                  No campaigns found on {networkName} yet.
                 </p>
                 <button onClick={() => onNavigate('create')} className="mt-2 text-xs" style={{ color: 'var(--accent)' }}>
                   Create the first one
