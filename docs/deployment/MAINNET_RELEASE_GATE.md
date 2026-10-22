@@ -6,9 +6,9 @@
 
 - [x] TypeScript and frontend lint checks
 - [x] Frontend Vitest tests (44 passed on commit 8ffc79b)
-- [x] Foundry Solidity tests (82 standard tests and 1 invariant suite passed on commit 8ffc79b)
+- [x] Foundry Solidity tests and invariant suite passed on commit `ca920d3` (GitHub Actions run `39850722862`)
 - [x] Mainnet-configured frontend production build
-- [x] GitHub Actions run #8 on commit `3dc7921`: 44/44 Vitest, 82/82 Foundry tests, 1 invariant suite, TypeScript, lint, and production build passed
+- [x] GitHub Actions run `39850722862` on commit `ca920d3`: frontend and contracts jobs both passed, including security regression tests
 
 ## Evidence required before promoting to production
 
@@ -19,16 +19,16 @@
 - [ ] Verify the production site is publicly accessible without a Vercel login
 - [ ] Confirm production UI clearly distinguishes sample/demo records from verified Mainnet transactions
 - [ ] Independently inspect an actual Mainnet transaction receipt involving the deployed escrow and USDC before claiming live activity
-- [ ] Conduct a security review of reviewer permissions, milestone approval, payout, cancellation, and refund paths
+- [ ] Complete independent security review of reviewer permissions, milestone approval, payout, cancellation, and refund paths (automated regression tests pass; independent review remains outstanding)
 - [ ] Obtain explicit authorization from an eligible account owner before any real-money deployment or transaction
 
 ## Contract security review — release blockers
 
-**Refund solvency after partial payouts (mitigation implemented; validation pending):** `claimRefund` retains each contributor's original full `contributions[campaignId][address]` entitlement, while `releaseMilestone` reduces the shared `campaignBalance[campaignId]`. The original implementation allowed cancellation after partial payouts, producing undercollateralized refund claims. The branch now rejects cancellation after any payout using `PayoutAlreadyMadeBlocksCancel`, and regression tests cover this policy. This prevents the documented shortfall through the cancellation path but means partially paid campaigns cannot be cancelled. **This is a product-policy trade-off, not a full security audit.** Verify CI and independently review before release.
+**Refund solvency after partial payouts (mitigation CI-verified):** `claimRefund` retains each contributor's original full `contributions[campaignId][address]` entitlement, while `releaseMilestone` reduces the shared `campaignBalance[campaignId]`. The original implementation allowed cancellation after partial payouts, producing undercollateralized refund claims. The branch now rejects cancellation after any payout using `PayoutAlreadyMadeBlocksCancel`, and regression tests cover this policy. This prevents the documented shortfall through the cancellation path but means partially paid campaigns cannot be cancelled. **This is a product-policy trade-off, not a full security audit.** CI passed at `ca920d3`; independently review before release.
 
 **Governance concentration:** `reviewer` is one globally authorized address and the `owner` can replace it. Require a documented reviewer/owner governance policy and threat model before any production use.
 
-**Mutable evidence (mitigation implemented; validation pending):** `submitEvidence` now rejects edits in Approved and Paid states. Edits are permitted after reviewer revocation (Completed state), with a regression test that requires a fresh approval to relock the evidence.
+**Mutable evidence (mitigation CI-verified):** `submitEvidence` now rejects edits in Approved and Paid states. Edits are permitted after reviewer revocation (Completed state), with a regression test that requires a fresh approval to relock the evidence.
 
 **Deployment constructor:** `ClearFundEscrow(address usdcTokenAddress, address initialReviewer)` sets `owner` to the deploying address. Validate token address, reviewer identity, owner governance and deployed bytecode before calling a contract production-ready. No Mainnet deployment has been verified.
 
