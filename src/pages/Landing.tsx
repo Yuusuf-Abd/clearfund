@@ -111,7 +111,7 @@ export default function Landing({ onNavigate, store }: LandingProps) {
                 style={{ background: 'var(--accent-dim)', border: '1px solid rgba(77,157,224,0.25)' }}>
                 <div className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--accent)' }} />
                 <span className="text-xs font-medium tracking-wide" style={{ color: 'var(--accent)' }}>
-                  DEMO PROTOTYPE — No real funds
+                  {mode === 'demo' ? 'DEMO PROTOTYPE — No real funds' : mode === 'testnet' ? 'ARC TESTNET — Test funds only' : 'ARC MAINNET — Verify transactions onchain'}
                 </span>
               </div>
 
@@ -548,7 +548,7 @@ export default function Landing({ onNavigate, store }: LandingProps) {
               {[
                 { icon: FileCheck, color: 'var(--accent)', title: 'Evidence required for every milestone', body: 'Organizers submit documents, links, or reports before any release can be requested.' },
                 { icon: ShieldCheck, color: 'var(--success)', title: 'Reviewer authorization enforced by contract', body: 'The smart contract validates reviewer identity — no frontend shortcut can bypass it.' },
-                { icon: ExternalLink, color: 'var(--warning)', title: 'Every release is a verifiable transaction', body: 'Fund releases are onchain events visible on the Arc Testnet explorer. Nothing is hidden.' },
+                { icon: ExternalLink, color: 'var(--warning)', title: 'Every release is a verifiable transaction', body: 'Fund releases are onchain events visible on the Arc explorer. Nothing is hidden.' },
               ].map(({ icon: Icon, color, title, body }) => (
                 <div key={title} className="flex gap-4">
                   <div className="shrink-0 mt-0.5 rounded-lg flex items-center justify-center"
@@ -719,7 +719,7 @@ export default function Landing({ onNavigate, store }: LandingProps) {
               <div className="inline-flex items-center gap-2 mb-5 px-3 py-1 rounded-full"
                 style={{ background: 'var(--accent-dim)', border: '1px solid rgba(77,157,224,0.25)' }}>
                 <div className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--accent)' }} />
-                <span className="text-xs font-medium" style={{ color: 'var(--accent)' }}>Built on Arc Testnet</span>
+                <span className="text-xs font-medium" style={{ color: 'var(--accent)' }}>Built on Arc {mode === 'mainnet' ? 'Mainnet' : mode === 'testnet' ? 'Testnet' : 'Studio'}</span>
               </div>
 
               <h2 className="display font-semibold mb-4 text-balance"
@@ -801,7 +801,7 @@ export default function Landing({ onNavigate, store }: LandingProps) {
             <p className="text-xs" style={{ color: 'rgba(148,163,184,0.45)' }}>
               {mode === 'demo'
                 ? 'DEMO mode — no contract deployed, no real funds. Sample data only.'
-                : 'Connected to Arc Testnet — test network only, no real funds.'}
+                : mode === 'mainnet' ? 'Arc Mainnet configured — verify contract and transaction evidence onchain.' : 'Connected to Arc Testnet — test network only, no real funds.'}
             </p>
             <p className="text-xs" style={{ color: 'rgba(148,163,184,0.35)' }}>
               Built on Arc · USDC native gas · Milestone escrow
