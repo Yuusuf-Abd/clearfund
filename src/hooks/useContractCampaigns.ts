@@ -2,8 +2,8 @@
  * useContractCampaigns — event-driven indexer for ClearFundEscrow campaigns.
  *
  * Scans CampaignCreated events from the deploy block forward and builds a list
- * of onchain campaign IDs. For each ID it calls useOnchainCampaign to load the
- * full campaign struct + balance.
+ * of onchain campaign IDs. For each ID it reads the contract directly to load
+ * the full campaign struct and balance.
  *
  * Design rules:
  * - Never starts from block 0. Reads current head first, then scans from
@@ -12,7 +12,7 @@
  * - Batches getLogs in 2 000-block ranges to stay within RPC limits.
  * - Persists last-scanned block in localStorage so a refresh resumes rather
  *   than re-scanning.
- * - Returns empty array + isLoading=false in DEMO mode (no RPC calls made).
+ * - Returns empty array + isLoading=false when no contract is configured.
  * - NEVER mixes these results with sample-data raisedAmount totals.
  */
 
@@ -109,11 +109,13 @@ export function useContractCampaigns(): IndexerState {
     setState((s) => ({ ...s, isLoading: true, error: undefined }))
 
     // Build a public client for the configured Arc network using the proxy when available.
-    const proxyChains: string[] = String(import.meta.env.VITE_RPC_PROXY_CHAINS ?? '').split(',')
+    const proxyChains: string[] = String(import.meta.env.VITE_RPC_PROXY_CHAINS ?? '').split(',').map((c) => c.trim())
     const compassKey = CLEARFUND_CHAIN.id === 5042 ? 'Arc_Mainnet' : 'Arc_Testnet'
+    const proxyBase = String(import.meta.env.VITE_RPC_PROXY_BASE_URL ?? '').trim()
+    const proxyToken = String(import.meta.env.VITE_RPC_PROXY_TOKEN ?? '').trim()
     const rpcUrl =
-      import.meta.env.VITE_RPC_PROXY_BASE_URL && proxyChains.some((c) => c === compassKey)
-        ? `${import.meta.env.VITE_RPC_PROXY_BASE_URL}/api/rpc/${compassKey}?_rpc_token=${import.meta.env.VITE_RPC_PROXY_TOKEN}`
+      proxyBase && proxyToken && proxyChains.includes(compassKey)
+        ? `${proxyBase.replace(/\/$/, '')}/api/rpc/${compassKey}?_rpc_token=${encodeURIComponent(proxyToken)}`
         : CLEARFUND_CHAIN.rpcUrls.default.http[0]
 
     const client = createPublicClient({ chain: CLEARFUND_CHAIN, transport: http(rpcUrl) })
