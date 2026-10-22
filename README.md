@@ -15,7 +15,7 @@ Traditional crowdfunding and grant systems release funds upfront with no mechani
 - **Milestone-locked escrow:** USDC is held in a smart contract and released only per milestone, never in a lump sum.
 - **Evidence requirement:** Organizers must attach verifiable proof (documents, links, reports) before a milestone can be approved.
 - **Independent reviewer:** A dedicated reviewer address (ideally a multi-sig) approves or revokes milestone approvals. The frontend role check is a UX hint only — the contract enforces access.
-- **Pull-pattern refunds:** If a campaign is cancelled, contributors can claim a refund of the unspent balance themselves — the contract never sweeps funds to the owner.
+- **Pull-pattern refunds:** If a campaign is cancelled before any payout, contributors can claim their full recorded contribution themselves. Cancellation is blocked after any milestone payout; the contract never sweeps funds to the owner.
 - **Full transparency:** Every contribution, milestone approval, and fund release is recorded onchain with a transaction reference linkable to the Arc block explorer.
 
 ---
@@ -33,7 +33,8 @@ Traditional crowdfunding and grant systems release funds upfront with no mechani
 | Contributor refund claim | ✅ |
 | Transaction Explorer with source labels | ✅ |
 | DEMO mode (no wallet, no contract) | ✅ |
-| Arc Testnet mode (live contract) | ✅ (contract deploy pending) |
+| Arc Testnet mode (live contract) | Code available; historical Testnet deployment requires separate verification |
+| Arc Mainnet live escrow | Not deployed or independently verified |
 
 ---
 
@@ -41,34 +42,34 @@ Traditional crowdfunding and grant systems release funds upfront with no mechani
 
 | Layer | Choice |
 |---|---|
-| Blockchain | Arc Testnet (chain ID 5042002, USDC as native gas) |
+| Blockchain | Arc Testnet (5042002) for development; Arc Mainnet (5042) configuration gated |
 | Smart contract | Solidity 0.8.28, OpenZeppelin 5.1.0 |
-| Contract tests | Foundry (forge) — 84 tests |
+| Contract tests | Foundry (forge) plus invariant tests; current CI status in GitHub Actions |
 | Frontend | React 18, TypeScript, Vite |
 | Onchain hooks | wagmi v2, viem, ConnectKit |
 | USDC | ERC-20 on Arc Testnet (`0x3600000000000000000000000000000000000000`) |
 | Styling | Tailwind CSS v3, CSS custom properties |
-| State persistence | localStorage (DEMO), wagmi/viem (testnet) |
+| State persistence | localStorage (DEMO), wagmi/viem (chain-dependent onchain mode) |
 
 ---
 
 ## Smart Contract Architecture
 
-**`contracts/ClearFundEscrow.sol`** — 314 lines, Solidity 0.8.28
+**`contracts/ClearFundEscrow.sol`** — Solidity 0.8.28
 
 ### Key design decisions
 
 - **Per-campaign balance accounting:** The contract tracks `campaignBalance[id]` separately from the global USDC balance, preventing cross-campaign fund mixing.
 - **CEI pattern throughout:** All state changes precede external calls (Checks-Effects-Interactions) to eliminate reentrancy.
-- **OZ ReentrancyGuard:** Applied to all state-mutating functions as a defence-in-depth layer.
-- **No emergency sweep:** The `emergencyWithdraw` function was deliberately removed (Phase 2 security audit finding). The owner cannot drain funds — only the designated recipient and contributors (via refund) can receive USDC.
+- **OZ ReentrancyGuard:** Applied to external token-transfer functions as a defence-in-depth layer.
+- **No emergency sweep:** The `emergencyWithdraw` function was deliberately removed during internal security review. The owner cannot drain funds — only the designated recipient and contributors (via refund) can receive USDC.
 - **Approval ≠ payout:** A reviewer calling `approveMilestone` does not transfer funds. The organizer must then call `releaseMilestone` — two distinct steps preventing accidental payouts.
 - **Revocable approvals:** The reviewer can call `revokeApproval` to undo an approval that was made in error, before the organizer calls release.
 
 ### State machine per milestone
 
 ```
-pending → in_progress → completed → (reviewer) → verified → (organizer release) → paid
+in_progress → completed → (reviewer) → approved → (organizer release) → paid
                                   ↑                         |
                                   └─────── revokeApproval ──┘
 ```
@@ -84,9 +85,9 @@ pending → in_progress → completed → (reviewer) → verified → (organizer
 | `markMilestoneComplete` | Campaign organizer | Marks milestone ready for review |
 | `approveMilestone` | Reviewer only | Approves a completed milestone |
 | `revokeApproval` | Reviewer only | Reverts an approval to Completed |
-| `releaseMilestone` | Anyone (permissionless after approval) | Releases USDC to recipient |
+| `releaseMilestone` | Campaign organizer only (after reviewer approval) | Releases USDC to recipient |
 | `cancelCampaign` | Campaign organizer | Cancels and enables refunds |
-| `claimRefund` | Contributor | Claims proportional refund post-cancel |
+| `claimRefund` | Contributor | Claims full original contribution after pre-payout cancellation |
 | `updateRecipient` | Campaign organizer | Changes recipient (blocked if approved milestones exist) |
 | `setReviewer` | Contract owner | Updates the global reviewer address |
 
@@ -99,7 +100,7 @@ pending → in_progress → completed → (reviewer) → verified → (organizer
 2. Contributors send USDC (approve ERC-20 allowance → contribute)
 3. Organizer marks milestone in_progress, completes work, submits evidence URI
 4. Reviewer inspects evidence off-chain and calls approveMilestone
-5. Organizer (or anyone) calls releaseMilestone → USDC transferred to recipient
+5. Organizer calls releaseMilestone → USDC transferred to recipient
 6. If campaign is cancelled before payout, contributors call claimRefund
 ```
 
@@ -116,7 +117,7 @@ pending → in_progress → completed → (reviewer) → verified → (organizer
 
 ```bash
 # Clone and install
-git clone https://github.com/<YOUR_GITHUB_USERNAME>/clearfund
+git clone https://github.com/Yuusuf-Abd/clearfund
 cd clearfund
 bun install
 
@@ -148,6 +149,8 @@ bun run check
 ## Deploying the Frontend
 
 ### Vercel
+
+**Release warning:** Production builds require explicit `VITE_CLEARFUND_CHAIN=mainnet`. A historical Testnet address must never be reused as proof of a Mainnet escrow. See [Mainnet release gate](docs/deployment/MAINNET_RELEASE_GATE.md) and [reviewer governance](docs/deployment/REVIEWER_GOVERNANCE.md). The current project is not verified for real-funds Mainnet use.
 
 1. Import the repository on [vercel.com](https://vercel.com).
 2. Vercel auto-detects `vercel.json`. Build command: `bun run build`. Output: `dist`.
