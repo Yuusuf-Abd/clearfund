@@ -159,11 +159,12 @@ export function useContractCampaigns(): IndexerState {
         fromBlock = toBlock + 1n
       }
 
+      // Do not commit a scan from an unmounted or superseded hook.
+      if (abortRef.current) return
+
       // Persist IDs before advancing the cursor so refreshes never lose campaigns.
       saveCampaignIds(newIds)
       saveLastBlock(head)
-
-      if (abortRef.current) return
 
       // 2. Load full campaign data for every discovered ID
       const loaded: IndexedCampaign[] = []
@@ -192,8 +193,10 @@ export function useContractCampaigns(): IndexerState {
             totalContributed, totalPaidOut, active, milestoneCount, totalAllocated,
             balance: rawBalance as bigint,
           })
-        } catch {
-          // skip campaigns that fail to load (e.g. RPC hiccup)
+        } catch (err) {
+          // A temporary RPC failure must not silently turn a real campaign
+          // into a missing row while reporting a successful index.
+          throw new Error(`Unable to load campaign ${id.toString()}: ${err instanceof Error ? err.message : 'RPC error'}`)
         }
       }
 
