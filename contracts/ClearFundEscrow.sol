@@ -248,12 +248,11 @@ contract ClearFundEscrow is Ownable, ReentrancyGuard {
      *         No new contributions or milestones are accepted.
      *         Cancellation is BLOCKED after any payout, or while any milestone
      *         is in Approved status.
-     *         Reason: releaseMilestone requires active=true, so an Approved milestone
-     *         on a cancelled campaign is permanently un-releasable, and because a
-     *         payout has been earmarked, contributors who contributed less than the
-     *         milestone amount may not be fully refundable. The organizer must either:
-     *         (a) release all Approved milestones first, or
-     *         (b) ask the reviewer to revokeApproval before cancelling.
+     *         Reason: releaseMilestone requires active=true, so Approved
+     *         milestones must first be revoked by the reviewer. Releasing
+     *         an Approved milestone instead permanently blocks cancellation.
+     *         This conservative policy keeps full original refund claims
+     *         backed by escrow funds on cancelled campaigns.
      * @param campaignId  ID of the campaign.
      */
     function cancelCampaign(uint256 campaignId) external {
