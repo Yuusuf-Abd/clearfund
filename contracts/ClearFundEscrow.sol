@@ -391,7 +391,7 @@ contract ClearFundEscrow is Ownable, ReentrancyGuard {
 
         Milestone storage m = _getMilestone(campaign, campaignId, milestoneIndex);
         // Once a reviewer approves evidence, the organizer must not be able
-        // to rewrite what was approved, even if approval is later revoked.
+        // to rewrite what was approved while approval remains in force.
         if (m.status == MilestoneStatus.Approved || m.status == MilestoneStatus.Paid) {
             revert EvidenceLockedAfterApproval();
         }
