@@ -293,6 +293,28 @@ contract ClearFundEscrowTest is Test {
         escrow.submitEvidence(id, 0, "ipfs://tampered");
     }
 
+    function test_SubmitEvidence_EditableAfterReviewerRevokesApproval() public {
+        uint256 id = _setupContributedCampaign();
+        vm.prank(organizer);
+        escrow.submitEvidence(id, 0, "ipfs://original");
+        _advanceToApproved(id, 0);
+
+        vm.prank(reviewer);
+        escrow.revokeApproval(id, 0);
+
+        vm.prank(organizer);
+        escrow.submitEvidence(id, 0, "ipfs://corrected");
+        (, , ClearFundEscrow.MilestoneStatus status, string memory evidence,) = escrow.milestones(id, 0);
+        assertEq(uint256(status), uint256(ClearFundEscrow.MilestoneStatus.Completed));
+        assertEq(evidence, "ipfs://corrected");
+
+        vm.prank(reviewer);
+        escrow.approveMilestone(id, 0);
+        vm.prank(organizer);
+        vm.expectRevert(ClearFundEscrow.EvidenceLockedAfterApproval.selector);
+        escrow.submitEvidence(id, 0, "ipfs://tampered-again");
+    }
+
     function test_SubmitEvidence_SetsURI() public {
         uint256 id = _createCampaign();
         vm.prank(organizer); escrow.addMilestone(id, "m0", MILESTONE_A);
