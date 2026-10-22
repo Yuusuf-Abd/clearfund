@@ -27,8 +27,8 @@ describe('withRpcRetry', () => {
   })
 
   it('rejects invalid retry counts', async () => {
-    await expect(withRpcRetry(async () => 1, 0)).rejects.toThrow(RangeError)
-    await expect(withRpcRetry(async () => 1, 1.5)).rejects.toThrow(RangeError)
+    await expect(withRpcRetry(() => Promise.resolve(1), 0)).rejects.toThrow(RangeError)
+    await expect(withRpcRetry(() => Promise.resolve(1), 1.5)).rejects.toThrow(RangeError)
   })
 
   it('supports one attempt when requested', async () => {
