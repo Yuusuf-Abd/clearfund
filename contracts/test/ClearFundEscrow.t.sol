@@ -275,6 +275,24 @@ contract ClearFundEscrowTest is Test {
     // 5. submitEvidence
     // ════════════════════════════════════════════════════════════════════════
 
+    function test_SubmitEvidence_RevertsAfterApproval() public {
+        uint256 id = _setupContributedCampaign();
+        _advanceToApproved(id, 0);
+        vm.prank(organizer);
+        vm.expectRevert(ClearFundEscrow.EvidenceLockedAfterApproval.selector);
+        escrow.submitEvidence(id, 0, "ipfs://tampered");
+    }
+
+    function test_SubmitEvidence_RevertsAfterPayment() public {
+        uint256 id = _setupContributedCampaign();
+        _advanceToApproved(id, 0);
+        vm.prank(organizer);
+        escrow.releaseMilestone(id, 0);
+        vm.prank(organizer);
+        vm.expectRevert(ClearFundEscrow.EvidenceLockedAfterApproval.selector);
+        escrow.submitEvidence(id, 0, "ipfs://tampered");
+    }
+
     function test_SubmitEvidence_SetsURI() public {
         uint256 id = _createCampaign();
         vm.prank(organizer); escrow.addMilestone(id, "m0", MILESTONE_A);
