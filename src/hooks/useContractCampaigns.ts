@@ -19,6 +19,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { createPublicClient, http, parseAbiItem } from 'viem'
 import { CLEARFUND_CHAIN, ESCROW_ADDRESS, CLEARFUND_ESCROW_ABI, isContractDeployed } from '../lib/clearfundContract'
+import { getIndexerBatchEnd } from '../lib/indexerBatch'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -143,8 +144,7 @@ export function useContractCampaigns(): IndexerState {
 
       while (fromBlock <= head) {
         if (abortRef.current) return
-        const batchEnd = fromBlock + BATCH_SIZE - 1n
-        const toBlock = batchEnd > head ? head : batchEnd
+        const toBlock = getIndexerBatchEnd(fromBlock, head, BATCH_SIZE)
 
         const logs = await client.getLogs({
           address: ESCROW_ADDRESS as `0x${string}`,
