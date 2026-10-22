@@ -135,7 +135,8 @@ export function useContractCampaigns(): IndexerState {
 
       while (fromBlock <= head) {
         if (abortRef.current) return
-        const toBlock = fromBlock + BATCH_SIZE > head ? head : fromBlock + BATCH_SIZE
+        const batchEnd = fromBlock + BATCH_SIZE - 1n
+        const toBlock = batchEnd > head ? head : batchEnd
 
         const logs = await client.getLogs({
           address: ESCROW_ADDRESS as `0x${string}`,
