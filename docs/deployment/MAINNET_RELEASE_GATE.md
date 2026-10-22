@@ -8,7 +8,7 @@
 - [x] Frontend Vitest tests (44 passed on commit 8ffc79b)
 - [x] Foundry Solidity tests and invariant suite passed on commit `ca920d3` (GitHub Actions run `39850722862`)
 - [x] Mainnet-configured frontend production build
-- [x] GitHub Actions run `39850722862` on commit `ca920d3`: frontend and contracts jobs both passed, including security regression tests
+- [x] GitHub Actions run `39851159116` on commit `8a61370`: frontend and contracts jobs both passed, including reviewer-rotation regression tests
 
 ## Evidence required before promoting to production
 
@@ -26,7 +26,7 @@
 
 **Refund solvency after partial payouts (mitigation CI-verified):** `claimRefund` retains each contributor's original full `contributions[campaignId][address]` entitlement, while `releaseMilestone` reduces the shared `campaignBalance[campaignId]`. The original implementation allowed cancellation after partial payouts, producing undercollateralized refund claims. The branch now rejects cancellation after any payout using `PayoutAlreadyMadeBlocksCancel`, and regression tests cover this policy. This prevents the documented shortfall through the cancellation path but means partially paid campaigns cannot be cancelled. **This is a product-policy trade-off, not a full security audit.** CI passed at `ca920d3`; independently review before release.
 
-**Governance concentration:** `reviewer` is one globally authorized address and the `owner` can replace it. Require a documented reviewer/owner governance policy and threat model before any production use.
+**Governance concentration:** `reviewer` is one globally authorized address and the `owner` can replace it. The threat model is documented in [REVIEWER_GOVERNANCE.md](./REVIEWER_GOVERNANCE.md). Key custody, outstanding approvals during rotation, and incident response still require independent review before production.
 
 **Mutable evidence (mitigation CI-verified):** `submitEvidence` now rejects edits in Approved and Paid states. Edits are permitted after reviewer revocation (Completed state), with a regression test that requires a fresh approval to relock the evidence.
 
