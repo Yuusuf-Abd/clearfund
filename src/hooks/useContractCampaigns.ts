@@ -25,6 +25,7 @@ import { withRpcRetry } from '../lib/indexerRpcRetry'
 import { shouldRebuildIndexer } from '../lib/indexerReorg'
 import { createScanGeneration } from '../lib/indexerScanGeneration'
 import { decodeIndexerCheckpoint, encodeIndexerCheckpoint } from '../lib/indexerCheckpoint'
+import { isIndexerHeadStable } from '../lib/indexerHeadStability'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -116,6 +117,11 @@ export function useContractCampaigns(): IndexerState {
     try {
       // 1. Get chain head — never crawl from 0
       const head = await withRpcRetry(() => client.getBlockNumber())
+      if (isStale()) return
+      // Pin the starting head hash; a reorg during log or contract reads
+      // must not produce a checkpoint that trusts mixed chain histories.
+      const initialHeadHash = (await withRpcRetry(() => client.getBlock({ blockNumber: head }))).hash
+      if (isStale()) return
       const deployBlock = getDeployBlock(head)
       // Legacy multi-key caches are intentionally ignored and rebuilt once.
       const checkpoint = loadCheckpoint()
@@ -202,6 +208,9 @@ export function useContractCampaigns(): IndexerState {
       // Never advance a cursor for a failed or abandoned refresh.
       const checkpointHash = (await withRpcRetry(() => client.getBlock({ blockNumber: head }))).hash
       if (isStale()) return
+      if (!isIndexerHeadStable(initialHeadHash, checkpointHash)) {
+        throw new Error('Chain reorganized during indexing; retry the scan to rebuild a consistent checkpoint')
+      }
       saveCheckpoint(head, checkpointHash, newIds)
 
       // Sort by campaign ID descending (newest first)
