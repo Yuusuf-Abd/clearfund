@@ -124,7 +124,8 @@ export function useContractCampaigns(): IndexerState {
       const deployBlock = getDeployBlock(head)
       const cachedIds = loadCampaignIds()
       // Old cursor-only caches cannot reconstruct previous campaigns; rescan once.
-      const resumeBlock = cachedIds.length ? (loadLastBlock() ?? deployBlock) + 1n : deployBlock
+      const lastScanned = loadLastBlock()
+      const resumeBlock = cachedIds.length && lastScanned !== undefined ? lastScanned + 1n : deployBlock
 
       // start from the later of resume block and deploy block
       let fromBlock = resumeBlock > deployBlock ? resumeBlock : deployBlock
