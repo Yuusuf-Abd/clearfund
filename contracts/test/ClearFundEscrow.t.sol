@@ -376,6 +376,30 @@ contract ClearFundEscrowTest is Test {
     // 7. approveMilestone
     // ════════════════════════════════════════════════════════════════════════
 
+    function test_CancelledCampaign_RejectsMilestoneMutations() public {
+        uint256 id = _createCampaign();
+        vm.prank(organizer); escrow.addMilestone(id, "m0", MILESTONE_A);
+        vm.prank(organizer); escrow.submitEvidence(id, 0, "ipfs://proof");
+        vm.prank(organizer); escrow.markMilestoneComplete(id, 0);
+        vm.prank(organizer); escrow.cancelCampaign(id);
+
+        vm.prank(organizer);
+        vm.expectRevert(ClearFundEscrow.CampaignInactive.selector);
+        escrow.submitEvidence(id, 0, "ipfs://changed");
+
+        vm.prank(organizer);
+        vm.expectRevert(ClearFundEscrow.CampaignInactive.selector);
+        escrow.markMilestoneComplete(id, 0);
+
+        vm.prank(reviewer);
+        vm.expectRevert(ClearFundEscrow.CampaignInactive.selector);
+        escrow.approveMilestone(id, 0);
+
+        vm.prank(reviewer);
+        vm.expectRevert(ClearFundEscrow.CampaignInactive.selector);
+        escrow.revokeApproval(id, 0);
+    }
+
     function test_ApproveMilestone_RevertsWithoutEvidence() public {
         uint256 id = _createCampaign();
         vm.prank(organizer); escrow.addMilestone(id, "m0", MILESTONE_A);
