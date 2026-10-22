@@ -2,9 +2,9 @@
  * ClearFund contract configuration and ABI.
  *
  * ─── HOW TO ACTIVATE ONCHAIN MODE ───────────────────────────────────────────
- * Testnet (default):
+ * Testnet (development only):
  *   VITE_CLEARFUND_ESCROW_ADDRESS=0x<deployed_address>
- *   (VITE_CLEARFUND_CHAIN is absent or set to "testnet")
+ *   VITE_CLEARFUND_CHAIN=testnet
  *
  * Mainnet:
  *   VITE_CLEARFUND_ESCROW_ADDRESS=0x<mainnet_deployed_address>
@@ -29,6 +29,7 @@
  */
 
 import { arcTestnet, arc as arcMainnet } from 'viem/chains'
+import { isAddress, zeroAddress } from 'viem'
 import { getUsdc } from '@/onchain-facts'
 
 // ── Canonical Arc chain IDs ───────────────────────────────────────────────────
@@ -38,10 +39,16 @@ export const ARC_TESTNET_CHAIN_ID = 5042002 as const
 export const ARC_MAINNET_CHAIN_ID = 5042 as const
 
 // ── Network selection ─────────────────────────────────────────────────────────
-// Defaults to testnet. Set VITE_CLEARFUND_CHAIN=mainnet for production.
+// Select the network explicitly; never silently fall back to Testnet in production.
 
-const isMainnetMode = ((import.meta.env.VITE_CLEARFUND_CHAIN as string | undefined) ?? '').toLowerCase() === 'mainnet'
-export const CLEARFUND_CHAIN = isMainnetMode ? arcMainnet : arcTestnet
+const configuredChain = ((import.meta.env.VITE_CLEARFUND_CHAIN as string | undefined) ?? '').toLowerCase()
+if (configuredChain && configuredChain !== 'mainnet' && configuredChain !== 'testnet') {
+  throw new Error('ClearFund: unsupported VITE_CLEARFUND_CHAIN')
+}
+if (import.meta.env.PROD && configuredChain !== 'mainnet') {
+  throw new Error('ClearFund: production requires explicit Arc Mainnet configuration')
+}
+export const CLEARFUND_CHAIN = configuredChain === 'mainnet' ? arcMainnet : arcTestnet
 
 /** True when the configured chain is Arc Testnet (chain ID 5042002). */
 export const isArcTestnet = (): boolean => CLEARFUND_CHAIN.id === ARC_TESTNET_CHAIN_ID
@@ -50,7 +57,7 @@ export const isArcTestnet = (): boolean => CLEARFUND_CHAIN.id === ARC_TESTNET_CH
 export const isArcMainnet = (): boolean => CLEARFUND_CHAIN.id === ARC_MAINNET_CHAIN_ID
 
 /** USDC ERC-20 address (6 decimals). Same on both Arc networks. */
-const _usdcFact = getUsdc(CLEARFUND_CHAIN.id) ?? getUsdc(arcTestnet.id)
+const _usdcFact = getUsdc(CLEARFUND_CHAIN.id)
 if (!_usdcFact) throw new Error('ClearFund: USDC address not found in onchain-facts for Arc network')
 export const USDC_ADDRESS: `0x${string}` = _usdcFact.address as `0x${string}`
 
@@ -62,11 +69,11 @@ export const ESCROW_ADDRESS = (
   import.meta.env.VITE_CLEARFUND_ESCROW_ADDRESS || ''
 ) as `0x${string}` | ''
 
-/** True when a valid contract address is configured. */
+/** True when a syntactically valid nonzero escrow address is configured. This does not prove contract deployment. */
 export const isContractDeployed = (): boolean =>
   typeof ESCROW_ADDRESS === 'string' &&
-  ESCROW_ADDRESS.startsWith('0x') &&
-  ESCROW_ADDRESS.length === 42
+  isAddress(ESCROW_ADDRESS) &&
+  ESCROW_ADDRESS.toLowerCase() !== zeroAddress
 
 // ── ABI ──────────────────────────────────────────────────────────────────────
 // Derived directly from the compiled contract. Every function, event, and
@@ -380,6 +387,9 @@ export const CLEARFUND_ESCROW_ABI = [
   { type: 'error', name: 'MilestoneAllocationExceeded', inputs: [] },
   { type: 'error', name: 'TooManyMilestones',           inputs: [] },
   { type: 'error', name: 'ApprovedMilestoneBlocksCancel', inputs: [] },
+  { type: 'error', name: 'PayoutAlreadyMadeBlocksCancel', inputs: [] },
+  { type: 'error', name: 'EvidenceLockedAfterApproval', inputs: [] },
+  { type: 'error', name: 'MissingMilestoneEvidence', inputs: [] },
   { type: 'error', name: 'InvalidMilestoneIndex',     inputs: [] },
   {
     type: 'error',

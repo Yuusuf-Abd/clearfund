@@ -42,8 +42,8 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
  *   - Owner can change reviewer: owner key compromise means a new reviewer can be set.
  *     Use a multi-sig or timelock as the owner for production deployments.
  *   - No funding deadline: campaigns do not expire. Organizer must cancel manually.
- *   - No contributor refunds on milestone over-payout: if totalPaidOut ever exceeded
- *     totalContributed (impossible given per-campaign balance accounting, but noted).
+ *   - Cancellation is unavailable after any milestone payout; remaining funds
+ *     stay committed to the active campaign. A separate closure policy is needed.
  *   - This contract has NOT been independently audited. Do not hold real funds without
  *     a professional third-party audit.
  */
@@ -133,6 +133,9 @@ contract ClearFundEscrow is Ownable, ReentrancyGuard {
     error MilestoneAllocationExceeded();
     error TooManyMilestones();
     error ApprovedMilestoneBlocksCancel();
+    error PayoutAlreadyMadeBlocksCancel();
+    error EvidenceLockedAfterApproval();
+    error MissingMilestoneEvidence();
     error InvalidMilestoneIndex();
     error InvalidMilestoneStatus(MilestoneStatus expected, MilestoneStatus actual);
     error MilestoneAlreadyPaid();
@@ -244,13 +247,13 @@ contract ClearFundEscrow is Ownable, ReentrancyGuard {
      * @notice Cancels an active campaign.
      * @dev    After cancellation contributors may call claimRefund().
      *         No new contributions or milestones are accepted.
-     *         Cancellation is BLOCKED when any milestone is in Approved status.
-     *         Reason: releaseMilestone requires active=true, so an Approved milestone
-     *         on a cancelled campaign is permanently un-releasable, and because a
-     *         payout has been earmarked, contributors who contributed less than the
-     *         milestone amount may not be fully refundable. The organizer must either:
-     *         (a) release all Approved milestones first, or
-     *         (b) ask the reviewer to revokeApproval before cancelling.
+     *         Cancellation is BLOCKED after any payout, or while any milestone
+     *         is in Approved status.
+     *         Reason: releaseMilestone requires active=true, so Approved
+     *         milestones must first be revoked by the reviewer. Releasing
+     *         an Approved milestone instead permanently blocks cancellation.
+     *         This conservative policy keeps full original refund claims
+     *         backed by escrow funds on cancelled campaigns.
      * @param campaignId  ID of the campaign.
      */
     function cancelCampaign(uint256 campaignId) external {
@@ -258,6 +261,11 @@ contract ClearFundEscrow is Ownable, ReentrancyGuard {
         _requireValidCampaign(campaign);
         if (campaign.organizer != msg.sender) revert NotOrganizer();
         if (!campaign.active) revert CampaignInactive();
+
+        // Once funds have been paid out, full original contribution refunds
+        // cannot be guaranteed. Prevent cancellation rather than allowing
+        // order-dependent, undercollateralized refund claims.
+        if (campaign.totalPaidOut != 0) revert PayoutAlreadyMadeBlocksCancel();
 
         // Block cancellation while any milestone is Approved but not yet Paid.
         // This prevents USDC from being permanently locked in the escrow.
@@ -285,8 +293,8 @@ contract ClearFundEscrow is Ownable, ReentrancyGuard {
         Campaign storage campaign = campaigns[campaignId];
         _requireValidCampaign(campaign);
         if (campaign.organizer != msg.sender) revert NotOrganizer();
-        // Allow on inactive campaigns that still hold a balance (blocklist remediation).
-        if (!campaign.active && campaignBalance[campaignId] == 0) revert CampaignInactive();
+        // Cancelled campaigns are refund-only; recipient changes have no payout purpose.
+        if (!campaign.active) revert CampaignInactive();
         if (newRecipient == address(0)) revert ZeroAddress();
 
         // Block if any milestone is awaiting payout (Approved but not yet Paid).
@@ -332,8 +340,8 @@ contract ClearFundEscrow is Ownable, ReentrancyGuard {
      * @dev    Only callable when the campaign is inactive (cancelled).
      *         Zeroes the contributor's record before transferring to prevent double-refund.
      *         Uses checks-effects-interactions and nonReentrant guard.
-     *         Does NOT refund contributions that were already consumed by a milestone
-     *         payout — campaignBalance accounts for payouts automatically.
+     *         Cancellation is forbidden after a payout, so every contributor's
+     *         full original claim remains backed by that campaign's balance.
      *         Cross-campaign isolation: only `campaignBalance[campaignId]` is touched;
      *         no other campaign's balance can be spent here.
      * @param campaignId  ID of the cancelled campaign.
@@ -348,11 +356,8 @@ contract ClearFundEscrow is Ownable, ReentrancyGuard {
         if (refundAmount == 0) revert NothingToRefund();
 
         // Revert if campaign balance cannot cover this contributor's full entitlement.
-        // This happens when milestones were released before cancellation consumed part
-        // of the balance. Reverting is honest: the contributor's record is NOT zeroed,
-        // preserving their claim in case the organizer later restores funds (unlikely,
-        // but correct). The organizer should release all approved milestones BEFORE
-        // cancelling if they want to maximise refundability.
+        // Defense in depth: cancellation forbids prior payouts, so under normal
+        // token behavior this balance is sufficient for every contributor.
         if (campaignBalance[campaignId] < refundAmount) revert InsufficientRefundBalance();
 
         // Checks-effects-interactions: decrement state before transfer.
@@ -382,9 +387,15 @@ contract ClearFundEscrow is Ownable, ReentrancyGuard {
     ) external {
         Campaign storage campaign = campaigns[campaignId];
         _requireValidCampaign(campaign);
+        if (!campaign.active) revert CampaignInactive();
         if (campaign.organizer != msg.sender) revert NotOrganizer();
 
         Milestone storage m = _getMilestone(campaign, campaignId, milestoneIndex);
+        // Once a reviewer approves evidence, the organizer must not be able
+        // to rewrite what was approved while approval remains in force.
+        if (m.status == MilestoneStatus.Approved || m.status == MilestoneStatus.Paid) {
+            revert EvidenceLockedAfterApproval();
+        }
         m.evidenceURI = evidenceURI;
         emit EvidenceSubmitted(campaignId, milestoneIndex, evidenceURI);
     }
@@ -398,6 +409,7 @@ contract ClearFundEscrow is Ownable, ReentrancyGuard {
     function markMilestoneComplete(uint256 campaignId, uint256 milestoneIndex) external {
         Campaign storage campaign = campaigns[campaignId];
         _requireValidCampaign(campaign);
+        if (!campaign.active) revert CampaignInactive();
         if (campaign.organizer != msg.sender) revert NotOrganizer();
 
         Milestone storage m = _getMilestone(campaign, campaignId, milestoneIndex);
@@ -422,11 +434,14 @@ contract ClearFundEscrow is Ownable, ReentrancyGuard {
 
         Campaign storage campaign = campaigns[campaignId];
         _requireValidCampaign(campaign);
+        if (!campaign.active) revert CampaignInactive();
 
         Milestone storage m = _getMilestone(campaign, campaignId, milestoneIndex);
         if (m.status != MilestoneStatus.Completed) {
             revert InvalidMilestoneStatus(MilestoneStatus.Completed, m.status);
         }
+
+        if (bytes(m.evidenceURI).length == 0) revert MissingMilestoneEvidence();
 
         m.status = MilestoneStatus.Approved;
         emit MilestoneApproved(campaignId, milestoneIndex, msg.sender);
@@ -448,6 +463,7 @@ contract ClearFundEscrow is Ownable, ReentrancyGuard {
 
         Campaign storage campaign = campaigns[campaignId];
         _requireValidCampaign(campaign);
+        if (!campaign.active) revert CampaignInactive();
 
         Milestone storage m = _getMilestone(campaign, campaignId, milestoneIndex);
         if (m.status != MilestoneStatus.Approved) {

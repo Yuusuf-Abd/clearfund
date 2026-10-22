@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { FileSearch, CheckCircle2, Search, ExternalLink, Copy, Check, Info } from 'lucide-react';
+import { FileSearch, Search, ExternalLink, Copy, Check, Info } from 'lucide-react';
 import { formatUSDC, shortTxRef } from '../data/sampleData';
 import { CampaignsStore } from '../hooks/useCampaigns';
 import Badge from '../components/Badge';
@@ -15,8 +15,8 @@ interface TxExplorerProps {
   store: CampaignsStore;
 }
 
-/** Source label distinguishes DEMO sample data from local drafts and real testnet hashes */
-type TxSource = 'demo' | 'local' | 'testnet'
+/** Source describes recorded references, not verified blockchain receipts. */
+type TxSource = 'demo' | 'local' | 'onchain'
 
 interface TxRow {
   txRef: string;
@@ -27,7 +27,6 @@ interface TxRow {
   from?: string;
   timestamp: string;
   note?: string;
-  verified: boolean;
   milestoneTitle?: string;
   source: TxSource;
 }
@@ -40,10 +39,10 @@ export default function TxExplorer({ onNavigate, store }: TxExplorerProps) {
   const [sourceFilter, setSourceFilter] = useState<'all' | TxSource>('all');
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
-  /** Real Arc Testnet tx hashes start with 0x and are 66 chars. Anything else is DEMO data. */
+  /** A syntactically valid hash is only an unverified reference. */
   function detectSource(txRef: string, isDemo: boolean | undefined): TxSource {
     if (isDemo) return 'demo'
-    if (txRef.startsWith('0x') && txRef.length === 66) return 'testnet'
+    if (/^0x[0-9a-fA-F]{64}$/.test(txRef)) return mode === 'demo' ? 'local' : 'onchain'
     return 'local'
   }
 
@@ -61,8 +60,6 @@ export default function TxExplorer({ onNavigate, store }: TxExplorerProps) {
         from: cn.contributor,
         timestamp: cn.timestamp,
         note: cn.note,
-        // Only mark verified when the tx hash is a genuine onchain record
-        verified: contributionSource === 'testnet',
         source: contributionSource,
       });
     }
@@ -75,7 +72,6 @@ export default function TxExplorer({ onNavigate, store }: TxExplorerProps) {
           type: 'release',
           amount: m.releasedAmount,
           timestamp: m.completedAt ?? m.dueDate,
-          verified: m.status === 'verified',
           milestoneTitle: m.title,
           source: detectSource(m.txRef, c.isDemo),
         });
@@ -124,15 +120,15 @@ export default function TxExplorer({ onNavigate, store }: TxExplorerProps) {
           <DemoBadge />
         </div>
         <p className="text-sm mb-8" style={{ color: 'var(--subtle)' }}>
-          All USDC contributions and milestone fund releases — linked to Arc transaction references.
+          Recorded contributions and milestone releases, including sample data and unverified transaction references.
         </p>
 
         {/* Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
           {[
-            { label: 'Total Volume', value: formatUSDC(totalVolume) },
-            { label: 'Contributions', value: String(unique.filter((t) => t.type === 'contribution').length) },
-            { label: 'Releases', value: String(unique.filter((t) => t.type === 'release').length) },
+            { label: 'Recorded Volume (Unverified)', value: formatUSDC(totalVolume) },
+            { label: 'Recorded Contributions', value: String(unique.filter((t) => t.type === 'contribution').length) },
+            { label: 'Recorded Releases', value: String(unique.filter((t) => t.type === 'release').length) },
           ].map(({ label, value }) => (
             <div key={label} className="glass rounded-2xl p-4 text-center">
               <div className="display font-semibold text-xl tabular-nums" style={{ color: 'var(--ink)' }}>
@@ -177,7 +173,7 @@ export default function TxExplorer({ onNavigate, store }: TxExplorerProps) {
         {/* Source filter */}
         <div className="flex items-center gap-1 mb-4 flex-wrap">
           <span className="text-xs mr-1" style={{ color: 'var(--subtle)' }}>Source:</span>
-          {(['all', 'demo', 'local', 'testnet'] as const).map((s) => (
+          {(['all', 'demo', 'local', 'onchain'] as const).map((s) => (
             <button
               key={s}
               onClick={() => setSourceFilter(s)}
@@ -188,7 +184,7 @@ export default function TxExplorer({ onNavigate, store }: TxExplorerProps) {
                 minHeight: 32,
               }}
             >
-              {s === 'testnet' ? 'Arc Testnet' : s.charAt(0).toUpperCase() + s.slice(1)}
+              {s === 'onchain' ? (mode === 'mainnet' ? 'Mainnet hash refs' : 'Testnet hash refs') : s.charAt(0).toUpperCase() + s.slice(1)}
             </button>
           ))}
         </div>
@@ -202,7 +198,7 @@ export default function TxExplorer({ onNavigate, store }: TxExplorerProps) {
           <span>
             <strong style={{ color: 'var(--ink)' }}>DEMO</strong> rows are sample data with fabricated references.{' '}
             <strong style={{ color: 'var(--ink)' }}>LOCAL DRAFT</strong> rows are user-created but not yet confirmed onchain.{' '}
-            <strong style={{ color: 'var(--ink)' }}>Arc Testnet</strong> rows ({mode === 'testnet' ? 'active' : 'none yet'}) have real tx hashes linkable to the block explorer.{' '}
+            <strong style={{ color: 'var(--ink)' }}>Arc</strong> references are linked to the configured explorer when a transaction hash is recorded; a hash alone does not prove confirmation.{' '}
             Simulated references are never displayed as confirmed blockchain transactions.
           </span>
         </div>
@@ -299,18 +295,18 @@ export default function TxExplorer({ onNavigate, store }: TxExplorerProps) {
                             LOCAL
                           </span>
                         )}
-                        {tx.source === 'testnet' && (
+                        {tx.source === 'onchain' && (
                           <span className="inline-flex px-1.5 py-0.5 rounded-full text-xs font-semibold"
                             style={{ background: 'rgba(77,157,224,0.15)', color: 'var(--accent)', border: '1px solid rgba(77,157,224,0.3)' }}>
-                            TESTNET
+                            TX HASH REF
                           </span>
                         )}
                       </td>
                       {/* Status */}
                       <td className="px-4 py-3">
-                        {tx.source === 'testnet' && tx.verified ? (
-                          <div className="flex items-center gap-1 text-xs" style={{ color: 'var(--success)' }}>
-                            <CheckCircle2 size={12} /> Verified Onchain
+                        {tx.source === 'onchain' ? (
+                          <div className="flex items-center gap-1 text-xs" style={{ color: 'var(--muted)' }}>
+                            <Info size={12} /> Unverified Reference
                           </div>
                         ) : tx.source === 'demo' ? (
                           <div className="text-xs" style={{ color: 'var(--subtle)' }}>DEMO</div>
@@ -318,15 +314,15 @@ export default function TxExplorer({ onNavigate, store }: TxExplorerProps) {
                           <div className="text-xs" style={{ color: 'var(--subtle)' }}>Local Draft</div>
                         )}
                       </td>
-                      {/* Link — only for real testnet hashes */}
+                      {/* Explorer links are references, not proof of confirmed receipts */}
                       <td className="px-4 py-3">
-                        {tx.source === 'testnet' ? (
+                        {tx.source === 'onchain' ? (
                           <a
                             href={`${CLEARFUND_CHAIN.blockExplorers?.default?.url}/tx/${tx.txRef}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            title="View on Arc Testnet Explorer"
-                            aria-label="View transaction on Arc Testnet Explorer"
+                            title="Look up transaction reference in the configured Arc explorer"
+                            aria-label="Look up transaction reference in the configured Arc explorer"
                           >
                             <ExternalLink size={12} style={{ color: 'var(--accent)' }} />
                           </a>

@@ -116,6 +116,7 @@ contract ClearFundEscrowTest is Test {
 
     /// Advances a milestone all the way to Approved.
     function _advanceToApproved(uint256 id, uint256 mIdx) internal {
+        vm.prank(organizer); escrow.submitEvidence(id, mIdx, "ipfs://verified-evidence");
         vm.prank(organizer); escrow.markMilestoneComplete(id, mIdx);
         vm.prank(reviewer);  escrow.approveMilestone(id, mIdx);
     }
@@ -275,6 +276,46 @@ contract ClearFundEscrowTest is Test {
     // 5. submitEvidence
     // ════════════════════════════════════════════════════════════════════════
 
+    function test_SubmitEvidence_RevertsAfterApproval() public {
+        uint256 id = _setupContributedCampaign();
+        _advanceToApproved(id, 0);
+        vm.prank(organizer);
+        vm.expectRevert(ClearFundEscrow.EvidenceLockedAfterApproval.selector);
+        escrow.submitEvidence(id, 0, "ipfs://tampered");
+    }
+
+    function test_SubmitEvidence_RevertsAfterPayment() public {
+        uint256 id = _setupContributedCampaign();
+        _advanceToApproved(id, 0);
+        vm.prank(organizer);
+        escrow.releaseMilestone(id, 0);
+        vm.prank(organizer);
+        vm.expectRevert(ClearFundEscrow.EvidenceLockedAfterApproval.selector);
+        escrow.submitEvidence(id, 0, "ipfs://tampered");
+    }
+
+    function test_SubmitEvidence_EditableAfterReviewerRevokesApproval() public {
+        uint256 id = _setupContributedCampaign();
+        vm.prank(organizer);
+        escrow.submitEvidence(id, 0, "ipfs://original");
+        _advanceToApproved(id, 0);
+
+        vm.prank(reviewer);
+        escrow.revokeApproval(id, 0);
+
+        vm.prank(organizer);
+        escrow.submitEvidence(id, 0, "ipfs://corrected");
+        (, , ClearFundEscrow.MilestoneStatus status, string memory evidence,) = escrow.milestones(id, 0);
+        assertEq(uint256(status), uint256(ClearFundEscrow.MilestoneStatus.Completed));
+        assertEq(evidence, "ipfs://corrected");
+
+        vm.prank(reviewer);
+        escrow.approveMilestone(id, 0);
+        vm.prank(organizer);
+        vm.expectRevert(ClearFundEscrow.EvidenceLockedAfterApproval.selector);
+        escrow.submitEvidence(id, 0, "ipfs://tampered-again");
+    }
+
     function test_SubmitEvidence_SetsURI() public {
         uint256 id = _createCampaign();
         vm.prank(organizer); escrow.addMilestone(id, "m0", MILESTONE_A);
@@ -335,9 +376,49 @@ contract ClearFundEscrowTest is Test {
     // 7. approveMilestone
     // ════════════════════════════════════════════════════════════════════════
 
+    function test_CancelledCampaign_RejectsMilestoneMutations() public {
+        uint256 id = _createCampaign();
+        vm.prank(organizer); escrow.addMilestone(id, "m0", MILESTONE_A);
+        vm.prank(organizer); escrow.submitEvidence(id, 0, "ipfs://proof");
+        vm.prank(organizer); escrow.markMilestoneComplete(id, 0);
+        vm.prank(organizer); escrow.cancelCampaign(id);
+
+        vm.prank(organizer);
+        vm.expectRevert(ClearFundEscrow.CampaignInactive.selector);
+        escrow.submitEvidence(id, 0, "ipfs://changed");
+
+        vm.prank(organizer);
+        vm.expectRevert(ClearFundEscrow.CampaignInactive.selector);
+        escrow.markMilestoneComplete(id, 0);
+
+        vm.prank(reviewer);
+        vm.expectRevert(ClearFundEscrow.CampaignInactive.selector);
+        escrow.approveMilestone(id, 0);
+
+        vm.prank(reviewer);
+        vm.expectRevert(ClearFundEscrow.CampaignInactive.selector);
+        escrow.revokeApproval(id, 0);
+    }
+
+    function test_ApproveMilestone_RevertsWithoutEvidence() public {
+        uint256 id = _createCampaign();
+        vm.prank(organizer); escrow.addMilestone(id, "m0", MILESTONE_A);
+        vm.prank(organizer); escrow.markMilestoneComplete(id, 0);
+
+        vm.prank(reviewer);
+        vm.expectRevert(ClearFundEscrow.MissingMilestoneEvidence.selector);
+        escrow.approveMilestone(id, 0);
+
+        vm.prank(organizer); escrow.submitEvidence(id, 0, "ipfs://verified-evidence");
+        vm.prank(reviewer); escrow.approveMilestone(id, 0);
+        (, , ClearFundEscrow.MilestoneStatus status, ,) = escrow.milestones(id, 0);
+        assertEq(uint256(status), uint256(ClearFundEscrow.MilestoneStatus.Approved));
+    }
+
     function test_ApproveMilestone_SetsStatus() public {
         uint256 id = _createCampaign();
         vm.prank(organizer); escrow.addMilestone(id, "m0", MILESTONE_A);
+        vm.prank(organizer); escrow.submitEvidence(id, 0, "ipfs://verified-evidence");
         vm.prank(organizer); escrow.markMilestoneComplete(id, 0);
         vm.prank(reviewer);  escrow.approveMilestone(id, 0);
 
@@ -396,6 +477,7 @@ contract ClearFundEscrowTest is Test {
     function test_ApproveMilestone_EmitsMilestoneApproved() public {
         uint256 id = _createCampaign();
         vm.prank(organizer); escrow.addMilestone(id, "m0", MILESTONE_A);
+        vm.prank(organizer); escrow.submitEvidence(id, 0, "ipfs://verified-evidence");
         vm.prank(organizer); escrow.markMilestoneComplete(id, 0);
 
         vm.prank(reviewer);
@@ -501,6 +583,7 @@ contract ClearFundEscrowTest is Test {
         uint256 id = _createCampaign();
         vm.prank(organizer); escrow.addMilestone(id, "m0", MILESTONE_A);
         // No contributions
+        vm.prank(organizer); escrow.submitEvidence(id, 0, "ipfs://verified-evidence");
         vm.prank(organizer); escrow.markMilestoneComplete(id, 0);
         vm.prank(reviewer);  escrow.approveMilestone(id, 0);
 
@@ -705,34 +788,26 @@ contract ClearFundEscrowTest is Test {
     // Partial-paid scenario: one milestone released, then cancel → claimRefund reverts
     // for contributors whose full contribution exceeds remaining balance, preserving their
     // record so they know there is a shortfall.
-    function test_ClaimRefund_RevertsOnShortfall() public {
+    function test_ClaimRefund_CannotBecomeUndercollateralizedAfterPayout() public {
         uint256 id = _createCampaign();
-        uint256 smallContrib = 50_000e6; // alice contributes less than MILESTONE_A
-        vm.prank(alice); escrow.contribute(id, smallContrib);
-        vm.prank(bob);   escrow.contribute(id, CONTRIB); // bob contributes 300k
-
-        vm.prank(organizer); escrow.addMilestone(id, "m0", MILESTONE_A); // 100k
-
-        // Release the milestone (only milestone_A = 100k of 350k total is paid out)
+        vm.prank(alice); escrow.contribute(id, 50_000e6);
+        vm.prank(bob); escrow.contribute(id, CONTRIB);
+        vm.prank(organizer); escrow.addMilestone(id, "m0", MILESTONE_A);
         _advanceToApproved(id, 0);
         vm.prank(organizer); escrow.releaseMilestone(id, 0);
 
-        // campaignBalance = 350k - 100k = 250k
+        vm.prank(organizer);
+        vm.expectRevert(ClearFundEscrow.PayoutAlreadyMadeBlocksCancel.selector);
+        escrow.cancelCampaign(id);
+
+        // Failed cancellation leaves the campaign active and the accounting unchanged.
+        (, , , , , uint256 paidOut, bool active, ,) = escrow.campaigns(id);
+        assertTrue(active);
+        assertEq(paidOut, MILESTONE_A);
         assertEq(escrow.campaignBalance(id), 250_000e6);
-
-        vm.prank(organizer); escrow.cancelCampaign(id);
-
-        // alice's record = 50k, balance = 250k ≥ 50k → alice can refund
-        vm.prank(alice); escrow.claimRefund(id);
-        assertEq(escrow.contributions(id, alice), 0);
-
-        // bob's record = 300k, but balance = 250k - 50k = 200k < 300k → revert
-        vm.prank(bob);
-        vm.expectRevert(ClearFundEscrow.InsufficientRefundBalance.selector);
+        vm.prank(alice);
+        vm.expectRevert(ClearFundEscrow.CampaignStillActive.selector);
         escrow.claimRefund(id);
-
-        // bob's record is preserved (not zeroed) so the shortfall is visible
-        assertEq(escrow.contributions(id, bob), CONTRIB);
     }
 
     // RefundClaimed event
@@ -750,6 +825,61 @@ contract ClearFundEscrowTest is Test {
     // ════════════════════════════════════════════════════════════════════════
     // 12. setReviewer
     // ════════════════════════════════════════════════════════════════════════
+
+    // Reviewer rotation must immediately revoke approval authority from the old key.
+    function test_SetReviewer_RotationRevokesOldReviewer() public {
+        uint256 id = _setupContributedCampaign();
+        vm.prank(organizer);
+        escrow.submitEvidence(id, 0, "ipfs://verified-evidence");
+        vm.prank(organizer);
+        escrow.markMilestoneComplete(id, 0);
+
+        address replacement = makeAddr("replacementReviewer");
+        vm.prank(owner);
+        escrow.setReviewer(replacement);
+
+        vm.prank(reviewer);
+        vm.expectRevert(ClearFundEscrow.NotReviewer.selector);
+        escrow.approveMilestone(id, 0);
+
+        vm.prank(replacement);
+        escrow.approveMilestone(id, 0);
+        (, , ClearFundEscrow.MilestoneStatus status, ,) = escrow.milestones(id, 0);
+        assertEq(uint256(status), uint256(ClearFundEscrow.MilestoneStatus.Approved));
+    }
+
+    // Only the owner may rotate reviewers; failed attempts leave authority unchanged.
+    function test_SetReviewer_ExistingApprovalCanBeRevokedByReplacement() public {
+        uint256 id = _setupContributedCampaign();
+        _advanceToApproved(id, 0);
+
+        address replacement = makeAddr("replacementForExistingApproval");
+        vm.prank(owner);
+        escrow.setReviewer(replacement);
+
+        // Rotation does not automatically revoke a previously approved milestone.
+        (, , ClearFundEscrow.MilestoneStatus beforeStatus, ,) = escrow.milestones(id, 0);
+        assertEq(uint256(beforeStatus), uint256(ClearFundEscrow.MilestoneStatus.Approved));
+
+        vm.prank(reviewer);
+        vm.expectRevert(ClearFundEscrow.NotReviewer.selector);
+        escrow.revokeApproval(id, 0);
+
+        vm.prank(replacement);
+        escrow.revokeApproval(id, 0);
+        (, , ClearFundEscrow.MilestoneStatus afterStatus, ,) = escrow.milestones(id, 0);
+        assertEq(uint256(afterStatus), uint256(ClearFundEscrow.MilestoneStatus.Completed));
+    }
+
+    function test_SetReviewer_NonOwnerCannotRotateAuthority() public {
+        address originalReviewer = escrow.reviewer();
+        vm.prank(organizer);
+        vm.expectRevert(
+            abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, organizer)
+        );
+        escrow.setReviewer(makeAddr("attackerReviewer"));
+        assertEq(escrow.reviewer(), originalReviewer);
+    }
 
     function test_SetReviewer_UpdatesReviewer() public {
         address newRev = makeAddr("newReviewer");
@@ -810,16 +940,18 @@ contract ClearFundEscrowTest is Test {
         escrow.updateRecipient(id, makeAddr("x"));
     }
 
-    function test_UpdateRecipient_AllowedInactiveWithBalance() public {
+    function test_UpdateRecipient_RevertsInactiveCampaignWithBalance() public {
         uint256 id = _createCampaign();
         vm.prank(alice); escrow.contribute(id, CONTRIB);
         vm.prank(organizer); escrow.cancelCampaign(id);
 
-        address newRecip = makeAddr("newRecipient");
-        vm.prank(organizer); escrow.updateRecipient(id, newRecip); // must not revert
+        vm.prank(organizer);
+        vm.expectRevert(ClearFundEscrow.CampaignInactive.selector);
+        escrow.updateRecipient(id, makeAddr("newRecipient"));
 
         (, address rec, , , , , , ,) = escrow.campaigns(id);
-        assertEq(rec, newRecip);
+        assertEq(rec, recipient);
+        assertEq(escrow.campaignBalance(id), CONTRIB);
     }
 
     // REGRESSION: updateRecipient blocked while any milestone is Approved
@@ -836,40 +968,25 @@ contract ClearFundEscrowTest is Test {
     // 14. Accounting consistency after refunds and payouts
     // ════════════════════════════════════════════════════════════════════════
 
-    function test_Accounting_AfterPartialPayoutAndRefund() public {
+    function test_Accounting_PartialPayoutPreventsCancellation() public {
         uint256 id = _createCampaign();
-        vm.prank(organizer); escrow.addMilestone(id, "m0", MILESTONE_A); // 100k
-        vm.prank(organizer); escrow.addMilestone(id, "m1", MILESTONE_B); // 200k
-
-        vm.prank(alice); escrow.contribute(id, 300_000e6); // 300k — covers both
-        vm.prank(bob);   escrow.contribute(id, 200_000e6); // 200k
-
-        // Release milestone 0 (100k)
+        vm.prank(organizer); escrow.addMilestone(id, "m0", MILESTONE_A);
+        vm.prank(organizer); escrow.addMilestone(id, "m1", MILESTONE_B);
+        vm.prank(alice); escrow.contribute(id, 300_000e6);
+        vm.prank(bob); escrow.contribute(id, 200_000e6);
         _advanceToApproved(id, 0);
         vm.prank(organizer); escrow.releaseMilestone(id, 0);
-
-        // Balance = 500k - 100k = 400k
         assertEq(escrow.campaignBalance(id), 400_000e6);
 
-        (, , , , , uint256 totalPaid, , ,) = escrow.campaigns(id);
-        assertEq(totalPaid, MILESTONE_A);
+        vm.prank(organizer);
+        vm.expectRevert(ClearFundEscrow.PayoutAlreadyMadeBlocksCancel.selector);
+        escrow.cancelCampaign(id);
 
-        // Cancel campaign — milestone 1 (200k) never released
-        vm.prank(organizer); escrow.cancelCampaign(id);
-
-        // alice contributed 300k, balance 400k ≥ 300k → refund succeeds
-        uint256 aliceBefore = usdc.balanceOf(alice);
-        vm.prank(alice); escrow.claimRefund(id);
-        assertEq(usdc.balanceOf(alice), aliceBefore + 300_000e6);
-        assertEq(escrow.campaignBalance(id), 100_000e6); // 400k - 300k remaining
-
-        // bob contributed 200k, but balance is now 100k < 200k → revert
-        vm.prank(bob);
-        vm.expectRevert(ClearFundEscrow.InsufficientRefundBalance.selector);
-        escrow.claimRefund(id);
-
-        // Contract still holds 100k
-        assertEq(usdc.balanceOf(address(escrow)), 100_000e6);
+        (, , , , , uint256 paidOut, bool active, ,) = escrow.campaigns(id);
+        assertTrue(active);
+        assertEq(paidOut, MILESTONE_A);
+        assertEq(escrow.campaignBalance(id), 400_000e6);
+        assertEq(usdc.balanceOf(address(escrow)), 400_000e6);
     }
 
     // ════════════════════════════════════════════════════════════════════════
@@ -937,6 +1054,7 @@ contract ClearFundEscrowTest is Test {
         vm.prank(organizer2); escrow.addMilestone(idB, "mB", MILESTONE_A);
         vm.prank(bob); escrow.contribute(idB, CONTRIB);
 
+        vm.prank(organizer2); escrow.submitEvidence(idB, 0, "ipfs://verified-evidence");
         vm.prank(organizer2); escrow.markMilestoneComplete(idB, 0);
         vm.prank(reviewer);   escrow.approveMilestone(idB, 0);
         vm.prank(organizer2); escrow.releaseMilestone(idB, 0);
@@ -1030,18 +1148,19 @@ contract ClearFundEscrowTest is Test {
         escrow.cancelCampaign(id);
     }
 
-    // Cancel is allowed after the Approved milestone is first released.
-    function test_CancelCampaign_AllowedAfterReleaseOfApprovedMilestone() public {
+    // Cancellation after any payout must fail to protect full refund solvency.
+    function test_CancelCampaign_RevertsAfterReleaseOfApprovedMilestone() public {
         uint256 id = _setupContributedCampaign();
         _advanceToApproved(id, 0);
 
-        // Release the approved milestone first
         vm.prank(organizer); escrow.releaseMilestone(id, 0);
 
-        // Now cancel must succeed
-        vm.prank(organizer); escrow.cancelCampaign(id);
+        vm.prank(organizer);
+        vm.expectRevert(ClearFundEscrow.PayoutAlreadyMadeBlocksCancel.selector);
+        escrow.cancelCampaign(id);
+
         (, , , , , , bool active, ,) = escrow.campaigns(id);
-        assertFalse(active);
+        assertTrue(active);
     }
 
     // Cancel is allowed after the reviewer revokes the approval.
@@ -1179,6 +1298,7 @@ contract ClearFundEscrowTest is Test {
     function test_Phase3_ApproveMilestone_AuthorizedReviewerOnly() public {
         uint256 id = _createCampaign();
         vm.prank(organizer); escrow.addMilestone(id, "m0", MILESTONE_A);
+        vm.prank(organizer); escrow.submitEvidence(id, 0, "ipfs://verified-evidence");
         vm.prank(organizer); escrow.markMilestoneComplete(id, 0);
 
         // Non-reviewer attempt must revert.

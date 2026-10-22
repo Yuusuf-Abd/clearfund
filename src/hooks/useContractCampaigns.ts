@@ -46,7 +46,9 @@ export interface IndexerState {
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-const LS_LAST_BLOCK_KEY = 'clearfund_indexer_last_block'
+const INDEXER_SCOPE = `${CLEARFUND_CHAIN.id}_${ESCROW_ADDRESS.toLowerCase()}`
+const LS_LAST_BLOCK_KEY = `clearfund_indexer_last_block_${INDEXER_SCOPE}`
+const LS_CAMPAIGN_IDS_KEY = `clearfund_indexer_campaign_ids_${INDEXER_SCOPE}`
 const BATCH_SIZE = 2_000n
 const LOOKBACK = 50_000n   // default lookback when deploy block is unknown
 
@@ -68,6 +70,20 @@ function loadLastBlock(): bigint | undefined {
 
 function saveLastBlock(block: bigint) {
   try { localStorage.setItem(LS_LAST_BLOCK_KEY, String(block)) } catch { /* ignore */ }
+}
+
+function loadCampaignIds(): bigint[] {
+  try {
+    const stored = localStorage.getItem(LS_CAMPAIGN_IDS_KEY)
+    if (!stored) return []
+    const parsed: unknown = JSON.parse(stored)
+    if (!Array.isArray(parsed)) return []
+    return parsed.filter((id): id is string => typeof id === 'string' && /^\d+$/.test(id)).map((id) => BigInt(id))
+  } catch { return [] }
+}
+
+function saveCampaignIds(ids: Set<bigint>) {
+  try { localStorage.setItem(LS_CAMPAIGN_IDS_KEY, JSON.stringify([...ids].map(String))) } catch { /* ignore */ }
 }
 
 const CAMPAIGN_CREATED_EVENT = parseAbiItem(
@@ -92,9 +108,9 @@ export function useContractCampaigns(): IndexerState {
     abortRef.current = false
     setState((s) => ({ ...s, isLoading: true, error: undefined }))
 
-    // Build a public client for Arc Testnet using the proxy env vars when available.
+    // Build a public client for the configured Arc network using the proxy when available.
     const proxyChains: string[] = String(import.meta.env.VITE_RPC_PROXY_CHAINS ?? '').split(',')
-    const compassKey = 'Arc_Testnet'
+    const compassKey = CLEARFUND_CHAIN.id === 5042 ? 'Arc_Mainnet' : 'Arc_Testnet'
     const rpcUrl =
       import.meta.env.VITE_RPC_PROXY_BASE_URL && proxyChains.some((c) => c === compassKey)
         ? `${import.meta.env.VITE_RPC_PROXY_BASE_URL}/api/rpc/${compassKey}?_rpc_token=${import.meta.env.VITE_RPC_PROXY_TOKEN}`
@@ -106,17 +122,27 @@ export function useContractCampaigns(): IndexerState {
       // 1. Get chain head — never crawl from 0
       const head = await client.getBlockNumber()
       const deployBlock = getDeployBlock(head)
-      const resumeBlock = loadLastBlock() ?? deployBlock
+      const cachedIds = loadCampaignIds()
+      // Old cursor-only caches cannot reconstruct previous campaigns; rescan once.
+      const lastScanned = loadLastBlock()
+      // If the RPC head moves backwards (e.g. a reorg or endpoint switch),
+      // cached IDs and the cursor may refer to blocks no longer on this chain.
+      // Rebuild from the configured deployment block instead of skipping logs.
+      const cacheAheadOfHead = lastScanned !== undefined && lastScanned > head
+      const resumeBlock = !cacheAheadOfHead && cachedIds.length && lastScanned !== undefined
+        ? lastScanned + 1n
+        : deployBlock
 
-      // start from the later of resume block and deploy block
+      // Start from the later of resume block and deploy block.
       let fromBlock = resumeBlock > deployBlock ? resumeBlock : deployBlock
 
-      // Collect new campaign IDs from events
-      const newIds = new Set<bigint>()
+      // Collect new campaign IDs from events; discard stale IDs on rollback.
+      const newIds = new Set<bigint>(cacheAheadOfHead ? [] : cachedIds)
 
       while (fromBlock <= head) {
         if (abortRef.current) return
-        const toBlock = fromBlock + BATCH_SIZE > head ? head : fromBlock + BATCH_SIZE
+        const batchEnd = fromBlock + BATCH_SIZE - 1n
+        const toBlock = batchEnd > head ? head : batchEnd
 
         const logs = await client.getLogs({
           address: ESCROW_ADDRESS as `0x${string}`,
@@ -133,6 +159,8 @@ export function useContractCampaigns(): IndexerState {
         fromBlock = toBlock + 1n
       }
 
+      // Persist IDs before advancing the cursor so refreshes never lose campaigns.
+      saveCampaignIds(newIds)
       saveLastBlock(head)
 
       if (abortRef.current) return
