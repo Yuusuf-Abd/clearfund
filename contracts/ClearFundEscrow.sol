@@ -135,6 +135,7 @@ contract ClearFundEscrow is Ownable, ReentrancyGuard {
     error ApprovedMilestoneBlocksCancel();
     error PayoutAlreadyMadeBlocksCancel();
     error EvidenceLockedAfterApproval();
+    error MissingMilestoneEvidence();
     error InvalidMilestoneIndex();
     error InvalidMilestoneStatus(MilestoneStatus expected, MilestoneStatus actual);
     error MilestoneAlreadyPaid();
@@ -436,6 +437,8 @@ contract ClearFundEscrow is Ownable, ReentrancyGuard {
         if (m.status != MilestoneStatus.Completed) {
             revert InvalidMilestoneStatus(MilestoneStatus.Completed, m.status);
         }
+
+        if (bytes(m.evidenceURI).length == 0) revert MissingMilestoneEvidence();
 
         m.status = MilestoneStatus.Approved;
         emit MilestoneApproved(campaignId, milestoneIndex, msg.sender);
