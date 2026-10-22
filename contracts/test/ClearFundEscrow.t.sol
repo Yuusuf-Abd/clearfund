@@ -783,6 +783,37 @@ contract ClearFundEscrowTest is Test {
     // 12. setReviewer
     // ════════════════════════════════════════════════════════════════════════
 
+    // Reviewer rotation must immediately revoke approval authority from the old key.
+    function test_SetReviewer_RotationRevokesOldReviewer() public {
+        uint256 id = _setupContributedCampaign();
+        vm.prank(organizer);
+        escrow.markMilestoneComplete(id, 0);
+
+        address replacement = makeAddr("replacementReviewer");
+        vm.prank(owner);
+        escrow.setReviewer(replacement);
+
+        vm.prank(reviewer);
+        vm.expectRevert(ClearFundEscrow.NotReviewer.selector);
+        escrow.approveMilestone(id, 0);
+
+        vm.prank(replacement);
+        escrow.approveMilestone(id, 0);
+        (, , ClearFundEscrow.MilestoneStatus status, ,) = escrow.milestones(id, 0);
+        assertEq(uint256(status), uint256(ClearFundEscrow.MilestoneStatus.Approved));
+    }
+
+    // Only the owner may rotate reviewers; failed attempts leave authority unchanged.
+    function test_SetReviewer_NonOwnerCannotRotateAuthority() public {
+        address originalReviewer = escrow.reviewer();
+        vm.prank(organizer);
+        vm.expectRevert(
+            abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, organizer)
+        );
+        escrow.setReviewer(makeAddr("attackerReviewer"));
+        assertEq(escrow.reviewer(), originalReviewer);
+    }
+
     function test_SetReviewer_UpdatesReviewer() public {
         address newRev = makeAddr("newReviewer");
         vm.prank(owner); escrow.setReviewer(newRev);
